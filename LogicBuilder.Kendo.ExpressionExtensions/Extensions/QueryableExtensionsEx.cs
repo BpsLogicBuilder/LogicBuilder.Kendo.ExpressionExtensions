@@ -20,6 +20,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <typeparam name="TModel"></typeparam>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Obsolete("Use CreateAggregatesQueryExpressions instead.")]
         public static Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> CreateAggregatesExpression<TModel>(this DataSourceRequest request)
         {
             if (request.Aggregates == null || request.Aggregates.Count == 0)
@@ -171,6 +172,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <typeparam name="TModel"></typeparam>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Obsolete("Use CreateGroupedByQueryExpressions instead.")]
         public static Expression<Func<IQueryable<TModel>, IEnumerable<AggregateFunctionsGroup>>> CreateGroupedDataExpression<TModel>(this DataSourceRequest request)
         {
             if (request.Groups == null || request.Groups.Count == 0)
@@ -184,6 +186,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             return Expression.Lambda<Func<IQueryable<TModel>, IEnumerable<AggregateFunctionsGroup>>>(ex, param);
         }
 
+        [Obsolete("Use CreateGroupedByQueryExpressions instead.")]
         public static Expression<Func<IQueryable<TModel>, IQueryable<AggregateFunctionsGroup>>> CreateGroupedQueryableExpression<TModel>(this DataSourceRequest request)
         {
             if (request.Groups == null || request.Groups.Count == 0)
@@ -195,6 +198,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             return Expression.Lambda<Func<IQueryable<TModel>, IQueryable<AggregateFunctionsGroup>>>(ex, param);
         }
 
+        [Obsolete("Use CreateGroupedByQueryExpressions instead.")]
         public static Expression CreateGroupedMethodExpression(this DataSourceRequest request, Expression ex)
         {
             if (request.Groups == null || request.Groups.Count == 0)
@@ -266,6 +270,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <typeparam name="TSource"></typeparam>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Obsolete("Use CreateUngroupedQueryableExpression instead.")]
         public static Expression<Func<IQueryable<TSource>, IEnumerable<TSource>>> CreateUngroupedDataExpression<TSource>(this DataSourceRequest request)
         {
             if (request.Groups != null && request.Groups.Count > 0)
