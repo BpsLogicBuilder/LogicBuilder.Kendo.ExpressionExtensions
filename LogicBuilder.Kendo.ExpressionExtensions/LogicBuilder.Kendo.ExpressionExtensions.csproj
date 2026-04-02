@@ -4,16 +4,24 @@
     <TargetFramework>net10.0</TargetFramework>
   <RootNamespace>LogicBuilder.Kendo.ExpressionExtensions</RootNamespace>
     <PackageId>LogicBuilder.Kendo.ExpressionExtensions</PackageId>
-    <Authors>BlaiseD</Authors>
+		<Authors>BlaiseD</Authors>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<WarningsAsErrors>true</WarningsAsErrors>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
     <Description>Extensions to create IQueryable expressions from Telerik's DataSourceRequest class.  The expressions can then be executed against an IQueryable.  This package depends on Telerik.UI.for.AspNet.Core but has not been created by Telerik/Progress.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Supporting .NET 10.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>Marking obsolete methods.</PackageReleaseNotes>
     <PackageTags>efcore kendo</PackageTags>
     <Copyright>Copyright © BPS 2018</Copyright>
-    <RepositoryUrl>https://github.com/BpsLogicBuilder/LogicBuilder.DataComponents</RepositoryUrl>
+    <RepositoryUrl>https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/BpsLogicBuilder/LogicBuilder</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
     <AssemblyOriginatorKeyFile>..\LogicBuilder.Rules.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <MinVerTagPrefix>v</MinVerTagPrefix>
@@ -23,6 +31,7 @@
 
 	<ItemGroup>
 		<None Include="docs\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\icon.png" Pack="true" PackagePath="\" Visible="False" />
 	</ItemGroup>
 
   <ItemGroup>
