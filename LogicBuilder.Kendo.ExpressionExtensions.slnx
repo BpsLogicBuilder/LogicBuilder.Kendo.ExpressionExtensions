@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests/LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.csproj" />
+  <Project Path="LogicBuilder.Kendo.ExpressionExtensions/LogicBuilder.Kendo.ExpressionExtensions.csproj" />
+</Solution>
