@@ -53,7 +53,7 @@ jobs:
 
   publish-packages:
     name: Publish to GitHub Packages
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.repository_owner == 'BpsLogicBuilder'
     permissions:
       contents: read
