@@ -5,6 +5,7 @@ using Contoso.Data.Entities;
 using Contoso.Domain.Entities;
 using Contoso.Repositories;
 using LogicBuilder.Expressions.Utils;
+using LogicBuilder.Expressions.Utils.Expansions;
 using LogicBuilder.Expressions.Utils.Strutures;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperProfiles;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
@@ -73,7 +74,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         public void Get_students_with_no_includes()
         {
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run(() => repository.GetItemsAsync<StudentModel, Student>()).Result;
+            ICollection<StudentModel> list = Task.Run(() => repository.GetAsync<StudentModel, Student>()).Result;
 
             Assert.True(list.Count == 11);
             Assert.True(list.First().Enrollments == null || list.First().Enrollments.Count == 0);
@@ -85,29 +86,52 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
             ICollection<StudentModel> list = Task.Run
             (
-                () => repository.GetItemsAsync<StudentModel, Student>
+                () => repository.GetAsync<StudentModel, Student>
                 (
-                    s => s.Enrollments.Count > 0, null,
-                    new Expression<Func<IQueryable<StudentModel>, IIncludableQueryable<StudentModel, object>>>[]
-                    {
-                        a => a.Include(x => x.Enrollments)
-                    }
+                    s => s.Enrollments.Count > 0,
+                    null,
+                    new SelectExpandDefinition
+                    (
+                        [],
+                        [
+                            new SelectExpandItem("enrollments")
+                        ]
+                    )
                 )
             ).Result;
 
             Assert.True(list.First().Enrollments.Count > 0);
-            Assert.Null(list.First().Enrollments.First().CourseTitle);
+            Assert.True(list.First().Enrollments.First().CourseTitle.Length > 1);
         }
 
         [Fact]
         public void Get_students_inlude_navigation_property_of_navigation_property()
         {
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run(() => repository.GetItemsAsync<StudentModel, Student>(s => s.Enrollments.Count() > 0, q => q.OrderBy(s => s.FirstName),
-                    new Expression<Func<IQueryable<StudentModel>, IIncludableQueryable<StudentModel, object>>>[]
-                    {
-                        a => a.Include(x => x.Enrollments).ThenInclude(e => e.CourseTitle)
-                    })).Result.ToList();
+            ICollection<StudentModel> list = Task.Run
+            (
+                () => repository.GetAsync<StudentModel, Student>
+                (
+                    s => s.Enrollments.Count() > 0,
+                    q => q.OrderBy(s => s.FirstName),
+                    new SelectExpandDefinition
+                    (
+                        [],
+                        [
+                            new SelectExpandItem
+                            (
+                                "enrollments",
+                                null,
+                                null,
+                                null,
+                                [
+                                    new SelectExpandItem("courseTitle")
+                                ]
+                            )
+                        ]
+                    )
+                )
+            ).Result.ToList();
 
             Assert.True(list.First().Enrollments.Count > 0);
             Assert.Equal("Arturo", list.First().FirstName);
@@ -118,7 +142,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         public void Get_students_filter_by_navigation_property_of_navigation_property()
         {
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run(() => repository.GetItemsAsync<StudentModel, Student>(s => s.Enrollments.Count(e => e.CourseID == 4022) > 0)).Result.ToList();
+            ICollection<StudentModel> list = Task.Run(() => repository.GetAsync<StudentModel, Student>(s => s.Enrollments.Count(e => e.CourseID == 4022) > 0)).Result.ToList();
 
             Assert.True(list.Count > 0);
         }

@@ -4,6 +4,7 @@ using Contoso.Contexts;
 using Contoso.Data.Entities;
 using Contoso.Domain.Entities;
 using Contoso.Repositories;
+using LogicBuilder.Expressions.Utils.Expansions;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperProfiles;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
 using Microsoft.EntityFrameworkCore;
@@ -36,13 +37,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             (
                 s => s.FullName == "Carson Alexander",
                 null,
-                new LogicBuilder.Expressions.Utils.Expansions.SelectExpandDefinition
-                {
-                    ExpandedItems = new List<LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem>
-                    {
-                        new LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem { MemberName = "enrollments" }
-                    }
-                }
+                new SelectExpandDefinition
+                (
+                    [],
+                    [
+                        new SelectExpandItem("enrollments")
+                    ]
+                )
             ).Result.Single();
             int id = student.ID;
             student.FirstName = "First";
@@ -60,13 +61,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             (
                 f => f.ID == id,
                 null,
-                new LogicBuilder.Expressions.Utils.Expansions.SelectExpandDefinition
-                {
-                    ExpandedItems = new List<LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem>
-                    {
-                        new LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem { MemberName = "enrollments" }
-                    }
-                }
+                new SelectExpandDefinition
+                (
+                    [],
+                    [
+                        new SelectExpandItem("enrollments")
+                    ]
+                )
             ).Result.SingleOrDefault();
             string student2FirstEnrollmentLetter = student2.Enrollments.First().GradeLetter;
             student2.LastName = "Last";
@@ -83,13 +84,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             (
                 f => f.ID == id,
                 null,
-                new LogicBuilder.Expressions.Utils.Expansions.SelectExpandDefinition
-                {
-                    ExpandedItems = new List<LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem>
-                    {
-                        new LogicBuilder.Expressions.Utils.Expansions.SelectExpandItem { MemberName = "enrollments" }
-                    }
-                }
+                new SelectExpandDefinition
+                (
+                    [],
+                    [
+                        new SelectExpandItem("enrollments")
+                    ]
+                )
             ).Result.SingleOrDefault();
             string student3FirstEnrollmentLetter = student3.Enrollments.First().GradeLetter;
 
