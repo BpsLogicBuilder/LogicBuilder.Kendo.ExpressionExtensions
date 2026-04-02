@@ -1,3 +1,4 @@
+* 2026-04-02 - AB#90: Remove unused helper methods.
 * 2026-04-02 - AB#90: Fix spacing in dotnet nuget push command in release.yml.
 * 2026-04-02 - AB#90: Use Windows-style paths in CI/CD YAML for .NET packaging.
 * 2026-04-02 - AB#90: Use windows in workflows - encryption not supported on ubuntu.

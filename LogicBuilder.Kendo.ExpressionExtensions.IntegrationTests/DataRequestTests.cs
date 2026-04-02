@@ -139,8 +139,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 Options = new DataSourceRequestOptions
                 {
                     //Queryable.Min<TSource, string> throws System.ArgumentException against In-Memory DB
-                    //Aggregate = "administratorName-min~name-count~budget-sum~budget-min~startDate-min",
-                    Aggregate = "administratorName-count~name-count~budget-sum~budget-min~startDate-min",
+                    Aggregate = "administratorName-min~name-count~budget-sum~budget-min~startDate-min",
+                    //Aggregate = "administratorName-count~name-count~budget-sum~budget-min~startDate-min",
                     Filter = null,
                     Group = "budget-asc",
                     Page = 1,
@@ -158,9 +158,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             Assert.Equal(4, result.Total);
             Assert.Equal(2, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
             Assert.Equal(5, result.AggregateResults.Count());
-            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
-            //Queryable.Min<TSource, string> throws System.ArgumentException against In-Memory DB
-            //Assert.Equal("Candace Kapoor", (string)result.AggregateResults.First().Value);
+            Assert.Equal("Min", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal("Candace Kapoor", (string)result.AggregateResults.First().Value);
         }
 
         [Fact]
@@ -178,19 +177,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     PageSize = 5
                 },
                 SelectExpandDefinition = new SelectExpandDefinition
-                {
-                    ExpandedItems = new List<SelectExpandItem>
-                    {
-                        new SelectExpandItem
-                        {
-                            MemberName = "courses"
-                        },
-                        new SelectExpandItem
-                        {
-                            MemberName = "officeAssignment"
-                        }
-                    }
-                },
+                (
+                    [],
+                    [
+                        new SelectExpandItem("courses"),
+                        new SelectExpandItem("officeAssignment")
+                    ]
+                ),
                 Selects = null,
                 Distinct = false
             };
@@ -219,19 +212,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     PageSize = 5
                 },
                 SelectExpandDefinition = new SelectExpandDefinition
-                {
-                    ExpandedItems = new List<SelectExpandItem>
-                    {
-                        new SelectExpandItem
-                        {
-                            MemberName = "courses"
-                        },
-                        new SelectExpandItem
-                        {
-                            MemberName = "officeAssignment"
-                        }
-                    }
-                },
+                (
+                    [],
+                    [
+                        new SelectExpandItem("courses"),
+                        new SelectExpandItem("officeAssignment")
+                    ]
+                ),
                 Selects = null,
                 Distinct = false
             };
@@ -292,15 +279,12 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     PageSize = 0
                 },
                 SelectExpandDefinition = new SelectExpandDefinition
-                {
-                    ExpandedItems = new List<SelectExpandItem>
-                    {
-                        new SelectExpandItem
-                        {
-                            MemberName = "enrollments"
-                        }
-                    }
-                },
+                (
+                    [],
+                    [
+                        new SelectExpandItem("enrollments")
+                    ]
+                ),
                 Selects = null,
                 Distinct = false
             };
@@ -371,11 +355,14 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 () => repository.GetAsync<StudentModel, Student>
                 (
                     s => s.Enrollments.Count > 0, 
-                    null, 
+                    null,
                     new SelectExpandDefinition
-                    {
-                        ExpandedItems =  new List<SelectExpandItem> { new SelectExpandItem { MemberName = "enrollments" } }
-                    }
+                    (
+                        [],
+                        [
+                            new SelectExpandItem("enrollments")
+                        ]
+                    )
                 )
             ).Result;
 
@@ -411,15 +398,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     s => s.Enrollments.Count > 0, 
                     null,
                     new SelectExpandDefinition
-                    {
-                        ExpandedItems = new List<SelectExpandItem> 
-                        { 
-                            new SelectExpandItem 
-                            { 
-                                MemberName = "enrollments",
-                                Filter = new SelectExpandItemFilter
-                                {
-                                    FilterLambdaOperator = new FilterLambdaOperator
+                    (
+                        [],
+                        [
+                            new SelectExpandItem
+                            (
+                                "enrollments",
+                                new SelectExpandItemFilter
+                                (
+                                    new FilterLambdaOperator
                                     (
                                         parameters,
                                         new EqualsBinaryOperator
@@ -430,10 +417,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                                         typeof(EnrollmentModel),
                                         "a"
                                     )
-                                }
-                            }
-                        }
-                    }
+                                )
+                            )
+                        ]
+                    )
                 )
             ).Result;
 
@@ -449,18 +436,18 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             (
                 () => repository.GetAsync<StudentModel, Student>
                 (
-                    s => s.Enrollments.Count > 0, 
+                    s => s.Enrollments.Count > 0,
                     null,
                     new SelectExpandDefinition
-                    {
-                        ExpandedItems = new List<SelectExpandItem>
-                        {
+                    (
+                        [],
+                        [
                             new SelectExpandItem
-                            {
-                                MemberName = "enrollments",
-                                Filter = new SelectExpandItemFilter
-                                {
-                                    FilterLambdaOperator = new FilterLambdaOperator
+                            (
+                                "enrollments",
+                                new SelectExpandItemFilter
+                                (
+                                    new FilterLambdaOperator
                                     (
                                         parameters,
                                         new GreaterThanBinaryOperator
@@ -471,24 +458,19 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                                         typeof(EnrollmentModel),
                                         "a"
                                     )
-                                },
-                                QueryFunction = new SelectExpandItemQueryFunction
-                                {
-                                    SortCollection = new SortCollection
+                                ),
+                                new SelectExpandItemQueryFunction
+                                (
+                                    new SortCollection
                                     (
-                                        new List<SortDescription>
-                                        {
-                                            new SortDescription
-                                            { 
-                                                PropertyName = "GradeLetter",
-                                                SortDirection = ListSortDirection.Ascending
-                                            }
-                                        }
+                                        [
+                                            new SortDescription("GradeLetter", ListSortDirection.Ascending)
+                                        ]
                                     )
-                                }
-                            }
-                        }
-                    }
+                                )
+                            )
+                        ]
+                    )
                 )
             ).Result;
 
@@ -515,15 +497,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     s => s.FirstName == "Carson" && s.LastName == "Alexander",
                     null,
                     new SelectExpandDefinition
-                    {
-                        ExpandedItems = new List<SelectExpandItem>
-                        {
+                    (
+                        [],
+                        [
                             new SelectExpandItem
-                            {
-                                MemberName = "enrollments",
-                                Filter = new SelectExpandItemFilter
-                                {
-                                    FilterLambdaOperator = new FilterLambdaOperator
+                            (
+                                "enrollments",
+                                new SelectExpandItemFilter
+                                (
+                                    new FilterLambdaOperator
                                     (
                                         parameters,
                                         new GreaterThanBinaryOperator
@@ -534,26 +516,21 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                                         typeof(EnrollmentModel),
                                         "a"
                                     )
-                                },
-                                QueryFunction = new SelectExpandItemQueryFunction
-                                {
-                                    SortCollection = new SortCollection
+                                ),
+                                new SelectExpandItemQueryFunction
+                                (
+                                    new SortCollection
                                     (
-                                        new List<SortDescription>
-                                        {
-                                            new SortDescription
-                                            {
-                                                PropertyName = "GradeLetter",
-                                                SortDirection = ListSortDirection.Descending,
-                                            }
-                                        },
+                                        [
+                                            new SortDescription("GradeLetter", ListSortDirection.Descending)
+                                        ],
                                         1,
                                         2
                                     )
-                                }
-                            }
-                        }
-                    }
+                                )
+                            )
+                        ]
+                    )
                 )
             ).Result;
 
