@@ -1,3 +1,4 @@
+* 2026-04-03 - AB#92: Fixed typo in testing steps to include code coverage.
 * 2026-04093 - AB#92: Adding Sonar and CodeCov integration to CI workflow.
 * 2026-04-03 - AB#91: Refactor: adopt C# 12 features and modernize codebase.
 * 2026-04-02 - AB#90: Remove unused helper methods.
