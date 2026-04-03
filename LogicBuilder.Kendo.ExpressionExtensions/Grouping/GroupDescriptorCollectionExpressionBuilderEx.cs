@@ -7,27 +7,18 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 {
-    internal class GroupDescriptorCollectionExpressionBuilderEx : ExpressionBuilderBase
+    internal class GroupDescriptorCollectionExpressionBuilderEx(Expression expression, IEnumerable<GroupDescriptor> groupDescriptors, Expression notPagedData) : ExpressionBuilderBase(expression.GetUnderlyingElementType())
     {
-        private readonly Expression queryable;
-        private readonly IEnumerable<GroupDescriptor> groupDescriptors;
-        private readonly Expression notPagedData;
-
-        public GroupDescriptorCollectionExpressionBuilderEx(Expression expression, IEnumerable<GroupDescriptor> groupDescriptors, Expression notPagedData)
-            : base(expression.GetUnderlyingElementType())
-        {
-            this.queryable = expression;
-            this.groupDescriptors = groupDescriptors;
-            this.notPagedData = notPagedData;
-        }
+        private readonly Expression queryable = expression;
+        private readonly IEnumerable<GroupDescriptor> groupDescriptors = groupDescriptors;
+        private readonly Expression notPagedData = notPagedData;
 
         public Expression CreateExpression()
         {
-            GroupDescriptorExpressionBuilderEx childBuilder = null;
+            GroupDescriptorExpressionBuilderEx? childBuilder = null;
             foreach (GroupDescriptor groupDescriptor in groupDescriptors.Reverse())
             {
                 var builder = new GroupDescriptorExpressionBuilderEx(this.queryable, groupDescriptor, childBuilder, notPagedData);
-                //builder.Options.LiftMemberAccessToNull = queryable.Provider.IsLinqToObjectsProvider();
                 builder.Options.LiftMemberAccessToNull = false;
                 childBuilder = builder;
             }

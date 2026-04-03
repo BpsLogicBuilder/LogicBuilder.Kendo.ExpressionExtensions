@@ -15,8 +15,7 @@ First implement the context, store, repository and service registrations as in [
         return await request.Options.CreateDataSourceRequest().GetDataSourceResult<TModel, TData>
         (
             contextRepository,
-            request.SelectExpandDefinition,
-            request.Includes.BuildIncludesExpressionCollection<TModel>()
+            request.SelectExpandDefinition
         );
     }
 

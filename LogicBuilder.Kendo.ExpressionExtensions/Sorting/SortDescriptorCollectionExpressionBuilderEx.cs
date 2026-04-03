@@ -8,20 +8,14 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.Sorting
 {
-    internal class SortDescriptorCollectionExpressionBuilderEx
+    internal class SortDescriptorCollectionExpressionBuilderEx(Expression parentExpression, IEnumerable<SortDescriptor> sortDescriptors)
     {
-        private readonly IEnumerable<SortDescriptor> sortDescriptors;
-        private readonly Expression parentExpression;
-
-        public SortDescriptorCollectionExpressionBuilderEx(Expression parentExpression, IEnumerable<SortDescriptor> sortDescriptors)
-        {
-            this.parentExpression = parentExpression;
-            this.sortDescriptors = sortDescriptors;
-        }
+        private readonly IEnumerable<SortDescriptor> sortDescriptors = sortDescriptors;
+        private readonly Expression parentExpression = parentExpression;
 
         public MethodCallExpression GetSortExpression()
         {
-            MethodCallExpression mce = null;
+            MethodCallExpression? mce = null;
             bool isFirst = true;
 
             foreach (var descriptor in this.sortDescriptors)
@@ -30,29 +24,28 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Sorting
                 var descriptorBuilder = ExpressionBuilderFactoryEx.MemberAccess(this.parentExpression, memberType, descriptor.Member);
                 var expression = descriptorBuilder.CreateLambdaExpression();
 
-                string methodName = "";
-                if (isFirst)
-                {
-                    methodName = descriptor.SortDirection == ListSortDirection.Ascending ?
-                        "OrderBy" : "OrderByDescending";
-                }
-                else
-                {
-                    methodName = descriptor.SortDirection == ListSortDirection.Ascending ?
-                        "ThenBy" : "ThenByDescending";
-                }
+                string methodName = isFirst 
+                    ? GetOrderByMethodName(descriptor.SortDirection) 
+                    : GetThenByMethodName(descriptor.SortDirection);
 
-                mce = Expression.Call(
-                        typeof(Queryable),
-                        methodName,
-                        new[] { parentExpression.GetUnderlyingElementType(), expression.Body.Type },
-                        isFirst ? parentExpression : mce,
-                        Expression.Quote(expression));
+                mce = Expression.Call
+                (
+                    typeof(Queryable),
+                    methodName,
+                    [parentExpression.GetUnderlyingElementType(), expression.Body.Type],
+                    isFirst ? parentExpression : mce!,//mce is not null after the first iteration
+                    Expression.Quote(expression)
+                );
 
                 isFirst = false;
+
+                static string GetOrderByMethodName(ListSortDirection sortDirection) =>
+                    sortDirection == ListSortDirection.Ascending ? "OrderBy" : "OrderByDescending";
+                static string GetThenByMethodName(ListSortDirection sortDirection) =>
+                    sortDirection == ListSortDirection.Ascending ? "ThenBy" : "ThenByDescending";
             }
 
-            return mce;
+            return mce!;//There is at least one sort descriptor (added by using FirstSortableProperty in QueryableExtensionsEx when there are no sort descriptors), so mce will not be null
         }
     }
 }

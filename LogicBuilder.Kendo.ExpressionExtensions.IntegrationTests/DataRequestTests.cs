@@ -8,19 +8,14 @@ using Kendo.Mvc.Infrastructure;
 using Kendo.Mvc.UI;
 using LogicBuilder.EntityFrameworkCore.SqlServer.Mapping;
 using LogicBuilder.Expressions.Utils.Expansions;
-using LogicBuilder.Expressions.Utils.ExpressionBuilder;
-using LogicBuilder.Expressions.Utils.ExpressionBuilder.Lambda;
-using LogicBuilder.Expressions.Utils.ExpressionBuilder.Logical;
-using LogicBuilder.Expressions.Utils.ExpressionBuilder.Operand;
-using LogicBuilder.Expressions.Utils.Strutures;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperProfiles;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
@@ -40,7 +35,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 
         #region Tests
         [Fact]
-        public void Get_students_ungrouped_with_aggregates()
+        public async Task Get_students_ungrouped_with_aggregates()
         {
             DataRequest request = new()
             {
@@ -59,7 +54,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<StudentModel, Student>(repository)).Result;
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
 
             Assert.Equal(11, result.Total);
             Assert.Equal(5, ((IEnumerable<StudentModel>)result.Data).Count());
@@ -70,7 +65,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
-        public void Get_students_grouped_with_aggregates()
+        public async Task Get_students_grouped_with_aggregates()
         {
             DataRequest request = new()
             {
@@ -89,7 +84,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<StudentModel, Student>(repository)).Result;
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
 
             Assert.Equal(11, result.Total);
             Assert.Equal(3, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
@@ -99,15 +94,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
-        public void Get_departments_ungrouped_with_aggregates_and_includes()
+        public async Task Get_departments_ungrouped_with_aggregates()
         {
             DataRequest request = new()
             {
                 Options = new DataSourceRequestOptions
                 {
-                    //Queryable.Min<TSource, string> throws System.ArgumentException against In-Memory DB
-                    //Aggregate = "administratorName-min~name-count~budget-sum~budget-min~startDate-min",
-                    Aggregate = "administratorName-count~name-count~budget-sum~budget-min~startDate-min",
+                    Aggregate = "administratorName-min~name-count~budget-sum~budget-min~startDate-min",
                     Filter = null,
                     Group = null,
                     Page = 1,
@@ -120,27 +113,24 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<DepartmentModel, Department>(repository)).Result;
+            DataSourceResult result = await request.GetData<DepartmentModel, Department>(repository);
 
             Assert.Equal(4, result.Total);
             Assert.Equal(4, ((IEnumerable<DepartmentModel>)result.Data).Count());
             Assert.Equal(5, result.AggregateResults.Count());
             Assert.Equal("Kim Abercrombie", ((IEnumerable<DepartmentModel>)result.Data).First().AdministratorName);
-            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
-            //Queryable.Min<TSource, string> throws System.ArgumentException against In - Memory DB
-           // Assert.Equal("Candace Kapoor", (string)result.AggregateResults.First().Value);
+            Assert.Equal("Min", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal("Candace Kapoor", (string)result.AggregateResults.First().Value);
         }
 
         [Fact]
-        public void Get_departments_grouped_with_aggregates()
+        public async Task Get_departments_grouped_with_aggregates()
         {
             DataRequest request = new()
             {
                 Options = new DataSourceRequestOptions
                 {
-                    //Queryable.Min<TSource, string> throws System.ArgumentException against In-Memory DB
                     Aggregate = "administratorName-min~name-count~budget-sum~budget-min~startDate-min",
-                    //Aggregate = "administratorName-count~name-count~budget-sum~budget-min~startDate-min",
                     Filter = null,
                     Group = "budget-asc",
                     Page = 1,
@@ -153,7 +143,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<DepartmentModel, Department>(repository)).Result;
+            DataSourceResult result = await request.GetData<DepartmentModel, Department>(repository);
 
             Assert.Equal(4, result.Total);
             Assert.Equal(2, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
@@ -163,7 +153,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
-        public void Get_instructors_ungrouped_with_aggregates()
+        public async Task Get_instructors_ungrouped_with_aggregates_and_expansions()
         {
             DataRequest request = new()
             {
@@ -189,16 +179,19 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<InstructorModel, Instructor>(repository)).Result;
+            DataSourceResult result = await request.GetData<InstructorModel, Instructor>(repository);
 
+            List<InstructorModel> instructors = [.. ((IEnumerable<InstructorModel>)result.Data)];
             Assert.Equal(5, result.Total);
-            Assert.Equal(5, ((IEnumerable<InstructorModel>)result.Data).Count());
+            Assert.Equal(5, instructors.Count);
             Assert.Equal(2, result.AggregateResults.Count());
-            Assert.Equal("Roger Zheng", ((IEnumerable<InstructorModel>)result.Data).First().FullName);
+            Assert.Equal("Roger Zheng", instructors[0].FullName);
+            Assert.NotEmpty(instructors[0].Courses);
+            Assert.NotNull(instructors[2].OfficeAssignment);
         }
 
         [Fact]
-        public void Get_instructors_grouped_with_aggregates_and_expansions()
+        public async Task Get_instructors_grouped_with_aggregates_and_expansions()
         {
             DataRequest request = new()
             {
@@ -224,18 +217,20 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<InstructorModel, Instructor>(repository)).Result;
+            DataSourceResult result = await request.GetData<InstructorModel, Instructor>(repository);
 
+            List<AggregateFunctionsGroup> groups = [.. ((IEnumerable<AggregateFunctionsGroup>)result.Data)];
             Assert.Equal(5, result.Total);
-            Assert.Equal(5, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
-            Assert.NotEmpty(((IEnumerable<AggregateFunctionsGroup>)result.Data).First().Items.Cast<InstructorModel>().First().Courses);
+            Assert.Equal(5, groups.Count);
+            Assert.NotEmpty(groups[0].Items.Cast<InstructorModel>().First().Courses);
+            Assert.NotNull(groups[3].Items.Cast<InstructorModel>().First().OfficeAssignment);
             Assert.Equal(2, result.AggregateResults.Count());
             Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
             Assert.Equal(5, (int)result.AggregateResults.First().Value);
         }
 
         [Fact]
-        public void Get_instructors_grouped_with_aggregates_without_includes()
+        public async Task Get_instructors_grouped_with_aggregates_without_expnsions()
         {
             DataRequest request = new()
             {
@@ -253,19 +248,20 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DataSourceResult result = Task.Run(() => request.GetData<InstructorModel, Instructor>(repository)).Result;
+            DataSourceResult result = await request.GetData<InstructorModel, Instructor>(repository);
 
+            List<AggregateFunctionsGroup> groups = [.. ((IEnumerable<AggregateFunctionsGroup>)result.Data)];
             Assert.Equal(5, result.Total);
             Assert.Equal(5, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
-            Assert.Null(((IEnumerable<AggregateFunctionsGroup>)result.Data).First().Items.Cast<InstructorModel>().First().Courses);
-            Assert.Null(((IEnumerable<AggregateFunctionsGroup>)result.Data).First().Items.Cast<InstructorModel>().First().OfficeAssignment);
+            Assert.Null(groups[0].Items.Cast<InstructorModel>().First().Courses);
+            Assert.Null(groups[3].Items.Cast<InstructorModel>().First().OfficeAssignment);
             Assert.Equal(2, result.AggregateResults.Count());
             Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
             Assert.Equal(5, (int)result.AggregateResults.First().Value);
         }
 
         [Fact]
-        public void Get_single_student_with_navigation_property_of_navigation_property()
+        public async Task Get_single_student_with_expansions()
         {
             DataRequest request = new()
             {
@@ -290,14 +286,14 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            StudentModel result = Task.Run(() => request.GetSingle<StudentModel, Student>(repository)).Result;
+            StudentModel result = await request.GetSingle<StudentModel, Student>(repository);
 
             Assert.Equal("Chemistry", result.Enrollments.First(e => !e.Grade.HasValue).CourseTitle);
             Assert.Equal("Arturo Anand", result.FullName);
         }
 
         [Fact]
-        public void Get_single_department()
+        public async Task Get_single_department()
         {
             DataRequest request = new()
             {
@@ -316,13 +312,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            DepartmentModel result = Task.Run(() => request.GetSingle<DepartmentModel, Department>(repository)).Result;
+            DepartmentModel result = await request.GetSingle<DepartmentModel, Department>(repository);
 
             Assert.Equal("Mathematics", result.Name);
         }
 
         [Fact]
-        public void Get_instructor_list_with_select_new()
+        public async Task Get_instructor_list_with_select_new()
         {
             DataRequest request = new()
             {
@@ -341,202 +337,9 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             };
 
             ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            IEnumerable<dynamic> result = Task.Run(() => request.GetDynamicSelect<InstructorModel, Instructor>(repository)).Result;
+            IEnumerable<dynamic> result = await request.GetDynamicSelect<InstructorModel, Instructor>(repository);
 
             Assert.Equal("Roger Zheng", result.First().fullName);
-        }
-
-        [Fact]
-        public void Get_students_with_filtered_inlude_no_filter_select_expand_definition()
-        {
-            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run
-            (
-                () => repository.GetAsync<StudentModel, Student>
-                (
-                    s => s.Enrollments.Count > 0, 
-                    null,
-                    new SelectExpandDefinition
-                    (
-                        [],
-                        [
-                            new SelectExpandItem("enrollments")
-                        ]
-                    )
-                )
-            ).Result;
-
-            Assert.True(list.First().Enrollments.Count > 0);
-        }
-
-        [Fact]
-        public void Get_students_no_filtered_inlude_no_filter_select_expand_definition()
-        {
-            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run
-            (
-                () => repository.GetAsync<StudentModel, Student>
-                (
-                    s => s.Enrollments.Count > 0,
-                    null,
-                    null
-                )
-            ).Result;
-
-            Assert.Null(list.First().Enrollments);
-        }
-
-        [Fact]
-        public void Get_students_with_filtered_inlude_with_filter_select_expand_definition()
-        {
-            var parameters = new Dictionary<string, ParameterExpression>();
-            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run
-            (
-                () => repository.GetAsync<StudentModel, Student>
-                (
-                    s => s.Enrollments.Count > 0, 
-                    null,
-                    new SelectExpandDefinition
-                    (
-                        [],
-                        [
-                            new SelectExpandItem
-                            (
-                                "enrollments",
-                                new SelectExpandItemFilter
-                                (
-                                    new FilterLambdaOperator
-                                    (
-                                        parameters,
-                                        new EqualsBinaryOperator
-                                        (
-                                            new MemberSelectorOperator("enrollmentID", new ParameterOperator(parameters, "a")),
-                                            new ConstantOperator(-1)
-                                        ),
-                                        typeof(EnrollmentModel),
-                                        "a"
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                )
-            ).Result;
-
-            Assert.False(list.First().Enrollments.Any());
-        }
-
-        [Fact]
-        public void Get_students_with_filtered_inlude_no_filter_sorted_select_expand_definition()
-        {
-            var parameters = new Dictionary<string, ParameterExpression>();
-            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run
-            (
-                () => repository.GetAsync<StudentModel, Student>
-                (
-                    s => s.Enrollments.Count > 0,
-                    null,
-                    new SelectExpandDefinition
-                    (
-                        [],
-                        [
-                            new SelectExpandItem
-                            (
-                                "enrollments",
-                                new SelectExpandItemFilter
-                                (
-                                    new FilterLambdaOperator
-                                    (
-                                        parameters,
-                                        new GreaterThanBinaryOperator
-                                        (
-                                            new MemberSelectorOperator("enrollmentID", new ParameterOperator(parameters, "a")),
-                                            new ConstantOperator(0)
-                                        ),
-                                        typeof(EnrollmentModel),
-                                        "a"
-                                    )
-                                ),
-                                new SelectExpandItemQueryFunction
-                                (
-                                    new SortCollection
-                                    (
-                                        [
-                                            new SortDescription("GradeLetter", ListSortDirection.Ascending)
-                                        ]
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                )
-            ).Result;
-
-            Assert.True(list.First().Enrollments.Count > 0);
-            Assert.True
-            (
-                string.Compare
-                (
-                    list.First().Enrollments.First().GradeLetter, 
-                    list.Skip(1).First().Enrollments.First().GradeLetter
-                ) <= 0
-            );
-        }
-
-        [Fact]
-        public void Get_students_with_filtered_inlude_no_filter_sort_skip_and_take_select_expand_definition()
-        {
-            var parameters = new Dictionary<string, ParameterExpression>();
-            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
-            ICollection<StudentModel> list = Task.Run
-            (
-                () => repository.GetAsync<StudentModel, Student>
-                (
-                    s => s.FirstName == "Carson" && s.LastName == "Alexander",
-                    null,
-                    new SelectExpandDefinition
-                    (
-                        [],
-                        [
-                            new SelectExpandItem
-                            (
-                                "enrollments",
-                                new SelectExpandItemFilter
-                                (
-                                    new FilterLambdaOperator
-                                    (
-                                        parameters,
-                                        new GreaterThanBinaryOperator
-                                        (
-                                            new MemberSelectorOperator("enrollmentID", new ParameterOperator(parameters, "a")),
-                                            new ConstantOperator(0)
-                                        ),
-                                        typeof(EnrollmentModel),
-                                        "a"
-                                    )
-                                ),
-                                new SelectExpandItemQueryFunction
-                                (
-                                    new SortCollection
-                                    (
-                                        [
-                                            new SortDescription("GradeLetter", ListSortDirection.Descending)
-                                        ],
-                                        1,
-                                        2
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                )
-            ).Result;
-
-            Assert.Single(list);
-            Assert.Equal(2, list.First().Enrollments.Count);
-            Assert.Equal("A", list.First().Enrollments.Last().GradeLetter);
         }
         #endregion Tests
 
@@ -583,28 +386,28 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             if ((await repository.CountAsync<StudentModel, Student>()) > 0)
                 return;//database has been seeded
 
-            InstructorModel[] instructors = new InstructorModel[]
-            {
-                new InstructorModel { FirstName = "Roger",   LastName = "Zheng", HireDate = DateTime.Parse("2004-02-12"), EntityState = LogicBuilder.Domain.EntityStateType.Added },
-                new InstructorModel { FirstName = "Kim", LastName = "Abercrombie", HireDate = DateTime.Parse("1995-03-11"), EntityState = LogicBuilder.Domain.EntityStateType.Added},
-                new InstructorModel { FirstName = "Fadi", LastName = "Fakhouri", HireDate = DateTime.Parse("2002-07-06"), OfficeAssignment = new OfficeAssignmentModel { Location = "Smith 17" }, EntityState = LogicBuilder.Domain.EntityStateType.Added},
-                new InstructorModel { FirstName = "Roger", LastName = "Harui", HireDate = DateTime.Parse("1998-07-01"), OfficeAssignment = new OfficeAssignmentModel { Location = "Gowan 27" }, EntityState = LogicBuilder.Domain.EntityStateType.Added },
-                new InstructorModel { FirstName = "Candace", LastName = "Kapoor", HireDate = DateTime.Parse("2001-01-15"), OfficeAssignment = new OfficeAssignmentModel { Location = "Thompson 304" }, EntityState = LogicBuilder.Domain.EntityStateType.Added }
-            };
+            InstructorModel[] instructors =
+            [
+                new InstructorModel { FirstName = "Roger",   LastName = "Zheng", HireDate = DateTime.Parse("2004-02-12", CultureInfo.InvariantCulture), EntityState = LogicBuilder.Domain.EntityStateType.Added },
+                new InstructorModel { FirstName = "Kim", LastName = "Abercrombie", HireDate = DateTime.Parse("1995-03-11", CultureInfo.InvariantCulture), EntityState = LogicBuilder.Domain.EntityStateType.Added},
+                new InstructorModel { FirstName = "Fadi", LastName = "Fakhouri", HireDate = DateTime.Parse("2002-07-06", CultureInfo.InvariantCulture), OfficeAssignment = new OfficeAssignmentModel { Location = "Smith 17" }, EntityState = LogicBuilder.Domain.EntityStateType.Added},
+                new InstructorModel { FirstName = "Roger", LastName = "Harui", HireDate = DateTime.Parse("1998-07-01", CultureInfo.InvariantCulture), OfficeAssignment = new OfficeAssignmentModel { Location = "Gowan 27" }, EntityState = LogicBuilder.Domain.EntityStateType.Added },
+                new InstructorModel { FirstName = "Candace", LastName = "Kapoor", HireDate = DateTime.Parse("2001-01-15", CultureInfo.InvariantCulture), OfficeAssignment = new OfficeAssignmentModel { Location = "Thompson 304" }, EntityState = LogicBuilder.Domain.EntityStateType.Added }
+            ];
             await repository.SaveGraphsAsync<InstructorModel, Instructor>(instructors);
 
-            DepartmentModel[] departments = new DepartmentModel[]
-            {
+            DepartmentModel[] departments =
+            [
                 new DepartmentModel
                 {
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     Name = "English",     Budget = 350000,
-                    StartDate = DateTime.Parse("2007-09-01"),
+                    StartDate = DateTime.Parse("2007-09-01", CultureInfo.InvariantCulture),
                     InstructorID = instructors.Single(i => i.FirstName == "Kim" && i.LastName == "Abercrombie").ID,
                     Courses =  new HashSet<CourseModel>
                     {
-                        new CourseModel {CourseID = 2021, Title = "Composition",    Credits = 3},
-                        new CourseModel {CourseID = 2042, Title = "Literature",     Credits = 4}
+                        new() {CourseID = 2021, Title = "Composition",    Credits = 3},
+                        new() {CourseID = 2042, Title = "Literature",     Credits = 4}
                     }
                 },
                 new DepartmentModel
@@ -612,23 +415,23 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     Name = "Mathematics",
                     Budget = 100000,
-                    StartDate = DateTime.Parse("2007-09-01"),
+                    StartDate = DateTime.Parse("2007-09-01", CultureInfo.InvariantCulture),
                     InstructorID = instructors.Single(i => i.FirstName == "Fadi" && i.LastName == "Fakhouri").ID,
                     Courses =  new HashSet<CourseModel>
                     {
-                        new CourseModel {CourseID = 1045, Title = "Calculus",       Credits = 4},
-                        new CourseModel {CourseID = 3141, Title = "Trigonometry",   Credits = 4}
+                        new() {CourseID = 1045, Title = "Calculus",       Credits = 4},
+                        new() {CourseID = 3141, Title = "Trigonometry",   Credits = 4}
                     }
                 },
                 new DepartmentModel
                 {
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     Name = "Engineering", Budget = 350000,
-                    StartDate = DateTime.Parse("2007-09-01"),
+                    StartDate = DateTime.Parse("2007-09-01", CultureInfo.InvariantCulture),
                     InstructorID = instructors.Single(i => i.FirstName == "Roger" && i.LastName == "Harui").ID,
                     Courses =  new HashSet<CourseModel>
                     {
-                        new CourseModel {CourseID = 1050, Title = "Chemistry",      Credits = 3}
+                        new() {CourseID = 1050, Title = "Chemistry",      Credits = 3}
                     }
                 },
                 new DepartmentModel
@@ -636,20 +439,20 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     Name = "Economics",
                     Budget = 100000,
-                    StartDate = DateTime.Parse("2007-09-01"),
+                    StartDate = DateTime.Parse("2007-09-01", CultureInfo.InvariantCulture),
                     InstructorID = instructors.Single(i => i.FirstName == "Candace" && i.LastName == "Kapoor").ID,
                     Courses =  new HashSet<CourseModel>
                     {
-                        new CourseModel {CourseID = 4022, Title = "Microeconomics", Credits = 3},
-                        new CourseModel {CourseID = 4041, Title = "Macroeconomics", Credits = 3 }
+                        new() {CourseID = 4022, Title = "Microeconomics", Credits = 3},
+                        new() {CourseID = 4041, Title = "Macroeconomics", Credits = 3 }
                     }
                 }
-            };
+            ];
             await repository.SaveGraphsAsync<DepartmentModel, Department>(departments);
 
             IEnumerable<CourseModel> courses = departments.SelectMany(d => d.Courses);
-            CourseAssignmentModel[] courseInstructors = new CourseAssignmentModel[]
-            {
+            CourseAssignmentModel[] courseInstructors =
+            [
                 new CourseAssignmentModel {
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     CourseID = courses.Single(c => c.Title == "Chemistry" ).CourseID,
@@ -690,30 +493,27 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     CourseID = courses.Single(c => c.Title == "Literature" ).CourseID,
                     InstructorID = instructors.Single(i => i.LastName == "Abercrombie").ID
                     },
-            };
+            ];
             await repository.SaveGraphsAsync<CourseAssignmentModel, CourseAssignment>(courseInstructors);
 
-            StudentModel[] students = new StudentModel[]
-            {
+            StudentModel[] students =
+            [
                 new StudentModel
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Carson",   LastName = "Alexander",
-                    EnrollmentDate = DateTime.Parse("2010-09-01"),
+                    EnrollmentDate = DateTime.Parse("2010-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Chemistry" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.A
                         },
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Microeconomics" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.C
                         },
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Macroeconomics" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
                         }
@@ -723,21 +523,18 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Meredith", LastName = "Alonso",
-                    EnrollmentDate = DateTime.Parse("2012-09-01"),
+                    EnrollmentDate = DateTime.Parse("2012-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Calculus" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
                         },
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Trigonometry" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
                         },
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Composition" ).CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
                         }
@@ -747,15 +544,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Arturo",   LastName = "Anand",
-                    EnrollmentDate = DateTime.Parse("2013-09-01"),
+                    EnrollmentDate = DateTime.Parse("2013-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Chemistry" ).CourseID
                         },
-                        new EnrollmentModel
-                        {
+                        new() {
                             CourseID = courses.Single(c => c.Title == "Microeconomics").CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
                         },
@@ -765,10 +560,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Gytis",    LastName = "Barzdukas",
-                    EnrollmentDate = DateTime.Parse("2012-09-01"),
+                    EnrollmentDate = DateTime.Parse("2012-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = courses.Single(c => c.Title == "Chemistry").CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
@@ -779,10 +574,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Yan",      LastName = "Li",
-                    EnrollmentDate = DateTime.Parse("2012-09-01"),
+                    EnrollmentDate = DateTime.Parse("2012-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = courses.Single(c => c.Title == "Composition").CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
@@ -793,10 +588,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Peggy",    LastName = "Justice",
-                    EnrollmentDate = DateTime.Parse("2011-09-01"),
+                    EnrollmentDate = DateTime.Parse("2011-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = courses.Single(c => c.Title == "Literature").CourseID,
                             Grade = Contoso.Domain.Entities.Grade.B
@@ -807,23 +602,23 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     EntityState =  LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Laura",    LastName = "Norman",
-                    EnrollmentDate = DateTime.Parse("2013-09-01")
+                    EnrollmentDate = DateTime.Parse("2013-09-01", CultureInfo.InvariantCulture)
                 },
                 new StudentModel
                 {
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Nino",     LastName = "Olivetto",
-                    EnrollmentDate = DateTime.Parse("2005-09-01")
+                    EnrollmentDate = DateTime.Parse("2005-09-01", CultureInfo.InvariantCulture)
                 },
                 new StudentModel
                 {
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Tom",
                     LastName = "Spratt",
-                    EnrollmentDate = DateTime.Parse("2010-09-01"),
+                    EnrollmentDate = DateTime.Parse("2010-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = 1045,
                             Grade = Contoso.Domain.Entities.Grade.B
@@ -835,10 +630,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Billie",
                     LastName = "Spratt",
-                    EnrollmentDate = DateTime.Parse("2010-09-01"),
+                    EnrollmentDate = DateTime.Parse("2010-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = 1050,
                             Grade = Contoso.Domain.Entities.Grade.B
@@ -850,17 +645,17 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     EntityState = LogicBuilder.Domain.EntityStateType.Added,
                     FirstName = "Jackson",
                     LastName = "Spratt",
-                    EnrollmentDate = DateTime.Parse("2017-09-01"),
+                    EnrollmentDate = DateTime.Parse("2017-09-01", CultureInfo.InvariantCulture),
                     Enrollments = new HashSet<EnrollmentModel>
                     {
-                        new EnrollmentModel
+                        new()
                         {
                             CourseID = 2021,
                             Grade = Contoso.Domain.Entities.Grade.B
                         }
                     }
                 }
-            };
+            ];
 
             await repository.SaveGraphsAsync<StudentModel, Student>(students);
         }

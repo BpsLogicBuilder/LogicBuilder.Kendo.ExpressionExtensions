@@ -8,44 +8,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
 {
     internal static class TypeExtensionsEx
     {
-        //internal static Type GetUnderlyingElementType(this Type type)
-        //{
-        //    TypeInfo tInfo = type.GetTypeInfo();
-        //    Type[] genericArguments;
-        //    if (!tInfo.IsGenericType || (genericArguments = tInfo.GetGenericArguments()).Length != 1)
-        //        throw new ArgumentException("type");
-
-        //    return genericArguments[0];
-        //}
-
-        internal static Type GetUnderlyingElementType(this Expression expression)
-        {
-            TypeInfo tInfo = expression.Type.GetTypeInfo();
-            Type[] genericArguments;
-            if (!tInfo.IsGenericType || (genericArguments = tInfo.GetGenericArguments()).Length != 1)
-                throw new ArgumentException("type");
-
-            return genericArguments[0];
-        }
-
-        internal static bool IsValueType(this Type type)
-        {
-            return type.GetTypeInfo().IsValueType;
-        }
-
-        internal static string FirstSortableProperty(this Type type)
-        {
-            PropertyInfo firstSortableProperty = type.GetProperties().Where(property => property.PropertyType.IsPredefinedType()).FirstOrDefault();
-
-            if (firstSortableProperty == null)
-            {
-                throw new NotSupportedException(Exceptions.CannotFindPropertyToSortBy);
-            }
-
-            return firstSortableProperty.Name;
-        }
-
-        internal static readonly Type[] PredefinedTypes = {
+        internal static readonly Type[] PredefinedTypes = [
             typeof(Object),
             typeof(Boolean),
             typeof(Char),
@@ -66,18 +29,32 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             typeof(Guid),
             typeof(Math),
             typeof(Convert)
-        };
+        ];
+
+        internal static Type GetUnderlyingElementType(this Expression expression)
+        {
+            TypeInfo tInfo = expression.Type.GetTypeInfo();
+            Type[] genericArguments = tInfo.IsGenericType ? tInfo.GetGenericArguments() : [];
+            if (genericArguments.Length != 1)
+                throw new ArgumentException("type");
+
+            return genericArguments[0];
+        }
+
+        internal static bool IsValueType(this Type type)
+        {
+            return type.GetTypeInfo().IsValueType;
+        }
+
+        internal static string FirstSortableProperty(this Type type)
+        {
+            PropertyInfo? firstSortableProperty = type.GetProperties().FirstOrDefault(property => property.PropertyType.IsPredefinedType()) ?? throw new NotSupportedException(Exceptions.CannotFindPropertyToSortBy);
+            return firstSortableProperty.Name;
+        }
 
         internal static bool IsPredefinedType(this Type type)
         {
-            foreach (Type t in PredefinedTypes)
-            {
-                if (t == type)
-                {
-                    return true;
-                }
-            }
-            return false;
+            return PredefinedTypes.Any(t => t == type);
         }
     }
 }

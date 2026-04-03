@@ -5,19 +5,9 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions
 {
-    public class AggregatesQueryExpressions<TModel>
+    public class AggregatesQueryExpressions<TModel>(Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression, Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> aggregateExpression)
     {
-        public AggregatesQueryExpressions()
-        {
-        }
-
-        public AggregatesQueryExpressions(Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression, Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> aggregateExpression)
-        {
-            QueryableExpression = queryableExpression;
-            AggregateExpression = aggregateExpression;
-        }
-
-        public Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> QueryableExpression { get; set; }
-        public Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> AggregateExpression { get; set; }
+        public Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> QueryableExpression { get; set; } = queryableExpression;
+        public Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> AggregateExpression { get; set; } = aggregateExpression;
     }
 }

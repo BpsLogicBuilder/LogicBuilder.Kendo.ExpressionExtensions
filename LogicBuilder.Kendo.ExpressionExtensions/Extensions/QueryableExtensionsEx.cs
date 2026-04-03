@@ -34,7 +34,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
 
             var aggregates = new List<AggregateDescriptor>(request.Aggregates);
 
-            if (filters.Any())
+            if (filters.Count != 0)
                 ex = ex.Where(filters);
 
             var queryableExpression = Expression.Lambda<Func<IQueryable<TModel>, IQueryable<TModel>>>
@@ -43,10 +43,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
                 param
             );
 
-            ex = ex.Aggregate(aggregates.SelectMany(a => a.Aggregates));
+            ex = ex.Aggregate(aggregates.SelectMany(a => a.Aggregates))!;// request.Aggregates.Count is greater than zero, so the result of Aggregate will not be null
             var aggregateExpression = Expression.Lambda<Func<IQueryable<TModel>, AggregateFunctionsGroup>>
             (
-                Expression.Call(typeof(Queryable), "FirstOrDefault", new Type[] { typeof(AggregateFunctionsGroup) }, ex),
+                Expression.Call(typeof(Queryable), "FirstOrDefault", [typeof(AggregateFunctionsGroup)], ex),
                 param
             );
 
@@ -72,7 +72,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             if (request.Filters != null)
                 filters.AddRange(request.Filters);
 
-            if (filters.Any())
+            if (filters.Count != 0)
                 ex = ex.Where(filters);
 
             var sort = new List<SortDescriptor>();
@@ -80,23 +80,23 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
                 sort.AddRange(request.Sorts);
 
             var temporarySortDescriptors = new List<SortDescriptor>();
-            IList<GroupDescriptor> groups = new List<GroupDescriptor>(request.Groups);
+            IList<GroupDescriptor> groups = [.. request.Groups];
 
             var aggregates = new List<AggregateDescriptor>();
             if (request.Aggregates != null)
                 aggregates.AddRange(request.Aggregates);
 
-            if (aggregates.Any())
+            if (aggregates.Count != 0)
                 groups.Each(g =>
                 {
                     g.AggregateFunctions.Clear();
                     g.AggregateFunctions.AddRange(aggregates.SelectMany(a => a.Aggregates));
                 });
 
-            if (!sort.Any())
+            if (sort.Count == 0)
             {
                 // The Entity Framework provider demands OrderBy before calling Skip.
-                SortDescriptor sortDescriptor = new SortDescriptor
+                SortDescriptor sortDescriptor = new()
                 {
                     Member = ex.GetUnderlyingElementType().FirstSortableProperty()
                 };
@@ -163,7 +163,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             if (request.Filters != null)
                 filters.AddRange(request.Filters);
 
-            if (filters.Any())
+            if (filters.Count != 0)
                 ex = ex.Where(filters);
 
             var sort = new List<SortDescriptor>();
@@ -172,10 +172,10 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
 
             var temporarySortDescriptors = new List<SortDescriptor>();
 
-            if (!sort.Any())
+            if (sort.Count == 0)
             {
                 // The Entity Framework provider demands OrderBy before calling Skip.
-                SortDescriptor sortDescriptor = new SortDescriptor
+                SortDescriptor sortDescriptor = new()
                 {
                     Member = ex.GetUnderlyingElementType().FirstSortableProperty()
                 };
@@ -206,7 +206,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             if (request.Filters != null)
                 filters.AddRange(request.Filters);
 
-            if (filters.Any())
+            if (filters.Count != 0)
                 ex = ex.Where(filters);
 
             ex = ex.Count();
@@ -218,7 +218,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             => Expression.Call(
                 typeof(Queryable),
                 methodName,
-                new[] { expression.GetUnderlyingElementType(), selector.Body.Type },
+                [expression.GetUnderlyingElementType(), selector.Body.Type],
                 expression,
                 Expression.Quote(selector));
 
@@ -285,7 +285,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <param name="parentExpression"></param>
         /// <returns></returns>
         public static MethodCallExpression ToList(this Expression parentExpression) 
-            => Expression.Call(typeof(Enumerable), "ToList", new Type[] { parentExpression.GetUnderlyingElementType() }, parentExpression);
+            => Expression.Call(typeof(Enumerable), "ToList", [parentExpression.GetUnderlyingElementType()], parentExpression);
 
         /// <summary>
         /// As Queryable
@@ -293,7 +293,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <param name="parentExpression"></param>
         /// <returns></returns>
         public static MethodCallExpression AsQueryable(this Expression parentExpression) 
-            => Expression.Call(typeof(Queryable), "AsQueryable", new Type[] { parentExpression.GetUnderlyingElementType() }, parentExpression);
+            => Expression.Call(typeof(Queryable), "AsQueryable", [parentExpression.GetUnderlyingElementType()], parentExpression);
 
         /// <summary>
         /// Order By
@@ -304,17 +304,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         public static MethodCallExpression OrderBy(this Expression parentExpression, LambdaExpression keySelector)
         {
             return parentExpression.CallQueryableMethod("OrderBy", keySelector);
-        }
-
-        /// <summary>
-        /// Order By Descending
-        /// </summary>
-        /// <param name="parentExpression"></param>
-        /// <param name="keySelector"></param>
-        /// <returns></returns>
-        public static MethodCallExpression OrderByDescending(this Expression parentExpression, LambdaExpression keySelector)
-        {
-            return parentExpression.CallQueryableMethod("OrderByDescending", keySelector);
         }
 
         /// <summary>
@@ -340,6 +329,17 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         }
 
         /// <summary>
+        /// Order By Descending
+        /// </summary>
+        /// <param name="parentExpression"></param>
+        /// <param name="keySelector"></param>
+        /// <returns></returns>
+        public static MethodCallExpression OrderByDescending(this Expression parentExpression, LambdaExpression keySelector)
+        {
+            return parentExpression.CallQueryableMethod("OrderByDescending", keySelector);
+        }
+
+        /// <summary>
         /// Get Group By Expression
         /// </summary>
         /// <param name="expression"></param>
@@ -360,7 +360,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         public static Expression GetGroupByExpression(this Expression expression, Expression notPagedData, IEnumerable<GroupDescriptor> groupDescriptors)
         {
             var builder = new GroupDescriptorCollectionExpressionBuilderEx(expression, groupDescriptors, notPagedData);
-            //builder.Options.LiftMemberAccessToNull = source.Provider.IsLinqToObjectsProvider();
             builder.Options.LiftMemberAccessToNull = false;
             return builder.CreateExpression();
         }
@@ -372,14 +371,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <param name="expression"></param>
         /// <param name="aggregateFunctions"></param>
         /// <returns></returns>
-        public static MethodCallExpression Aggregate(this Expression expression, IEnumerable<AggregateFunction> aggregateFunctions)
+        public static MethodCallExpression? Aggregate(this Expression expression, IEnumerable<AggregateFunction> aggregateFunctions)
         {
             var functions = aggregateFunctions.ToList();
 
             if (functions.Count > 0)
             {
                 var builder = new QueryableAggregatesExpressionBuilderEx(expression, functions);
-                //builder.Options.LiftMemberAccessToNull = source.Provider.IsLinqToObjectsProvider();
                 builder.Options.LiftMemberAccessToNull = false;
                 return builder.CreateExpression();
             }
@@ -398,7 +396,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             return Expression.Call(
                    typeof(Queryable),
                    "Where",
-                   new[] { expression.GetUnderlyingElementType() },
+                   [expression.GetUnderlyingElementType()],
                    expression,
                    Expression.Quote(predicate));
         }
@@ -417,7 +415,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
                 var parameterExpression = Expression.Parameter(expression.GetUnderlyingElementType(), "item");
 
                 var expressionBuilder = new FilterDescriptorCollectionExpressionBuilder(parameterExpression, filterDescriptors);
-                //expressionBuilder.Options.LiftMemberAccessToNull = source.Provider.IsLinqToObjectsProvider();
                 expressionBuilder.Options.LiftMemberAccessToNull = isLiftedToNull;
                 var predicate = expressionBuilder.CreateFilterExpression();
                 return expression.Where(predicate);
@@ -434,11 +431,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <returns></returns>
         public static Expression Take(this Expression expression, int count)
         {
-            if (expression == null) throw new ArgumentNullException("expression");
-            return Expression.Call(
-                    typeof(Queryable), "Take",
-                    new Type[] { expression.GetUnderlyingElementType() },
-                    expression, Expression.Constant(count));
+            ArgumentNullException.ThrowIfNull(expression);
+            return Expression.Call
+            (
+                typeof(Queryable), 
+                "Take",
+                [expression.GetUnderlyingElementType()],
+                expression, 
+                Expression.Constant(count)
+            );
         }
 
         /// <summary>
@@ -449,11 +450,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <returns></returns>
         public static Expression Skip(this Expression expression, int count)
         {
-            if (expression == null) throw new ArgumentNullException("expression");
-            return Expression.Call(
-                    typeof(Queryable), "Skip",
-                    new Type[] { expression.GetUnderlyingElementType() },
-                    expression, Expression.Constant(count));
+            ArgumentNullException.ThrowIfNull(expression);
+            return Expression.Call
+            (
+                typeof(Queryable),
+                "Skip",
+                [expression.GetUnderlyingElementType()],
+                expression, 
+                Expression.Constant(count)
+            );
         }
 
         /// <summary>
@@ -463,10 +468,14 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <returns></returns>
         public static MethodCallExpression Count(this Expression expression)
         {
-            if (expression == null) throw new ArgumentNullException("expression");
-            return Expression.Call(
-                    typeof(Queryable), "Count",
-                    new Type[] { expression.GetUnderlyingElementType() }, expression);
+            ArgumentNullException.ThrowIfNull(expression);
+            return Expression.Call
+            (
+                typeof(Queryable), 
+                "Count",
+                [expression.GetUnderlyingElementType()], 
+                expression
+            );
         }
     }
 }

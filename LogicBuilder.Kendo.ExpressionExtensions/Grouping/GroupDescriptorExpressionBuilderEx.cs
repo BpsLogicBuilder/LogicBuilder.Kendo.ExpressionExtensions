@@ -6,22 +6,24 @@ using LogicBuilder.Kendo.ExpressionExtensions.Expressions;
 using LogicBuilder.Kendo.ExpressionExtensions.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 {
-    internal class GroupDescriptorExpressionBuilderEx : GroupDescriptorExpressionBuilderBaseEx
+    internal class GroupDescriptorExpressionBuilderEx(Expression queryable, GroupDescriptor groupDescriptor, GroupDescriptorExpressionBuilderEx? childBuilder, Expression notPagedExpression) : GroupDescriptorExpressionBuilderBaseEx(queryable)
     {
-        private readonly GroupDescriptor groupDescriptor;
-        private readonly GroupDescriptorExpressionBuilderEx childBuilder;
-        private readonly Expression notPagedExpression;
+        private readonly GroupDescriptor groupDescriptor = groupDescriptor;
+        private readonly GroupDescriptorExpressionBuilderEx? childBuilder = childBuilder;
+        private readonly Expression notPagedExpression = notPagedExpression;
 
-        private ParameterExpression groupingParameterExpression;
-        private Expression aggregateParameterExpression;
+        private ParameterExpression? groupingParameterExpression;
+        private Expression? aggregateParameterExpression;
 
-        public GroupDescriptorExpressionBuilderEx ChildBuilder
+        [MemberNotNullWhen(true, nameof(HasSubgroups))]
+        public GroupDescriptorExpressionBuilderEx? ChildBuilder
         {
             get
             {
@@ -78,14 +80,11 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
                     var groupItemsFilterExpression = CreateChildItemsFilterExpression();
                     Expression items = notPagedExpression;
 
-                    if (ParentBuilder != null)
-                    {
-                        ParentBuilder.CreateChildItemsFilterExpressionFromRecursive()
+                    ParentBuilder?.CreateChildItemsFilterExpressionFromRecursive()
                                .Each(expression =>
                                {
                                    items = items.Where(expression);
                                });
-                    }
 
                     items = items.Where(groupItemsFilterExpression);
 
@@ -96,7 +95,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
             }
         }
 
-        public GroupDescriptorExpressionBuilderEx ParentBuilder
+        public GroupDescriptorExpressionBuilderEx? ParentBuilder
         {
             get;
             set;
@@ -106,14 +105,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
             : this(queryable, groupDescriptor, null, queryable)
         {
             this.groupDescriptor = groupDescriptor;
-        }
-
-        public GroupDescriptorExpressionBuilderEx(Expression queryable, GroupDescriptor groupDescriptor, GroupDescriptorExpressionBuilderEx childBuilder, Expression notPagedExpression)
-            : base(queryable)
-        {
-            this.groupDescriptor = groupDescriptor;
-            this.childBuilder = childBuilder;
-            this.notPagedExpression = notPagedExpression;
         }
 
         protected override LambdaExpression CreateGroupByExpression()
@@ -135,12 +126,12 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
         {
             if (HasSubgroups)
             {
-                childBuilder.ParentBuilder = this;
+                childBuilder!.ParentBuilder = this;//We know child builder is not null since HasSubgroups is true.
             }
             return Expression.Lambda(this.CreateSelectBodyExpression(), this.GroupingParameterExpression);
         }
 
-        private Expression CreateSelectBodyExpression()
+        private MemberInitExpression CreateSelectBodyExpression()
         {
             var newGroupExpression = Expression.New(typeof(AggregateFunctionsGroup));
             var memberBindings = this.CreateMemberBindings();
@@ -164,7 +155,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 
         protected MemberBinding CreateItemsMemberBinding()
         {
-            PropertyInfo itemsPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("Items");
+            PropertyInfo itemsPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.Items))!;//We know this property exists since we are creating the expression for it.
             Expression itemsExpression = this.CreateItemsExpression();
 
             return Expression.Bind(itemsPropertyInfo, itemsExpression);
@@ -180,12 +171,12 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
             return this.GroupingParameterExpression;
         }
 
-        private Expression CreateItemsExpressionFromChildBuilder()
+        private MethodCallExpression CreateItemsExpressionFromChildBuilder()
         {
             var groupItemsFilterExpression = CreateChildItemsFilterExpression();
 
             Expression groupItems = this.Queryable.Where(groupItemsFilterExpression);
-            childBuilder.Queryable = groupItems;
+            childBuilder!.Queryable = groupItems;//We know child builder is not null since HasSubgroups is true.
 
             return childBuilder.CreateExpression();
         }
@@ -215,15 +206,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 
         protected MemberBinding CreateKeyMemberBinding()
         {
-            PropertyInfo keyPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("Key");
+            PropertyInfo keyPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.Key))!;//Known property
             Expression keyPropertyExpression = Expression.Property(GroupingParameterExpression, "Key");
 
             // Our Key property is of type object so we need to box if the value is ValueType.
             // EF did not support convert so did not call it.
             // Note: We can fix all this if our group is generic type similar to IGrouping<TKey, TElement>
             if (keyPropertyExpression.Type.IsValueType())
-            //&&
-            //!this.Queryable.Provider.IsEntityFrameworkProvider())
             {
                 keyPropertyExpression = Expression.Convert(keyPropertyExpression, typeof(object));
             }
@@ -233,17 +222,17 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 
         protected MemberBinding CreateCountMemberBinding()
         {
-            PropertyInfo itemCountPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("ItemCount");
+            PropertyInfo itemCountPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.ItemCount))!;//Known property
 
             Expression countMethodCallExpression =
-                Expression.Call(typeof(Enumerable), "Count", new[] { this.ItemType }, GroupingParameterExpression);
+                Expression.Call(typeof(Enumerable), "Count", [this.ItemType], GroupingParameterExpression);
 
             return Expression.Bind(itemCountPropertyInfo, countMethodCallExpression);
         }
 
         protected MemberBinding CreateFieldNameMemberBinding()
         {
-            PropertyInfo memberPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("Member");
+            PropertyInfo memberPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.Member))!;//Known property
             Expression memberExpression = Expression.Constant(GroupDescriptor.Member ?? "");
 
             return Expression.Bind(memberPropertyInfo, memberExpression);
@@ -251,7 +240,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 
         protected MemberBinding CreateHasSubgroupsMemberBinding()
         {
-            PropertyInfo hasSubgroupsPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("HasSubgroups");
+            PropertyInfo hasSubgroupsPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.HasSubgroups))!;//Known property
             Expression hasSubgroupsExpression = Expression.Constant(this.HasSubgroups);
 
             return Expression.Bind(hasSubgroupsPropertyInfo, hasSubgroupsExpression);
@@ -259,13 +248,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 
         protected MemberBinding CreateAggregateFunctionsProjectionMemberBinding()
         {
-            PropertyInfo projectionPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty("AggregateFunctionsProjection");
+            PropertyInfo projectionPropertyInfo = typeof(AggregateFunctionsGroup).GetProperty(nameof(AggregateFunctionsGroup.AggregateFunctionsProjection))!;//Known property
             Expression projectionInitExpression = this.CreateProjectionInitExpression();
 
             return Expression.Bind(projectionPropertyInfo, projectionInitExpression);
         }
 
-        private Expression CreateProjectionInitExpression()
+        private MemberInitExpression CreateProjectionInitExpression()
         {
             var projectionPropertyValueExpressions = this.ProjectionPropertyValueExpressions().ToList();
             var newProjectionExpression = this.CreateProjectionNewExpression(projectionPropertyValueExpressions);
@@ -292,7 +281,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
         {
             return
                 this.groupDescriptor.AggregateFunctions.Consolidate(
-                    propertyValuesExpressions, (f, e) => Expression.Bind(projectionType.GetProperty(f.FunctionName), e)).Cast<MemberBinding>();
+                    propertyValuesExpressions, (f, e) => Expression.Bind(projectionType.GetProperty(f.FunctionName)!/*Invalid function names are filtered out by Kendo.Mvc.*/, e)).Cast<MemberBinding>();
         }
     }
 }

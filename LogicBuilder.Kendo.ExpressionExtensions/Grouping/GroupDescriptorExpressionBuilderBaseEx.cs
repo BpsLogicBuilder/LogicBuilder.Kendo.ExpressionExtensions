@@ -5,14 +5,9 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 {
-    internal abstract class GroupDescriptorExpressionBuilderBaseEx : ExpressionBuilderBase
+    internal abstract class GroupDescriptorExpressionBuilderBaseEx(Expression parentExpression) : ExpressionBuilderBase(parentExpression.GetUnderlyingElementType())
     {
-        protected Expression queryable;
-
-        protected GroupDescriptorExpressionBuilderBaseEx(Expression parentExpression) : base(parentExpression.GetUnderlyingElementType())
-        {
-            this.queryable = parentExpression;
-        }
+        protected Expression queryable = parentExpression;
 
         public virtual Expression Queryable
         {
