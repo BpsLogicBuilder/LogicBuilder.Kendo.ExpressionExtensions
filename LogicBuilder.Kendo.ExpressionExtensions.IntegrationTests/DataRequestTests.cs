@@ -24,6 +24,11 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 {
     public class DataRequestTests
     {
+        static DataRequestTests()
+        {
+            InitializeMapperConfiguration();
+        }
+
         public DataRequestTests()
         {
             Initialize();
@@ -65,6 +70,36 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
+        public async Task Get_students_ungrouped_with_aggregates_and_filter()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = "id~gt~0",
+                    Group = null,
+                    Page = 1,
+                    Sort = "enrollmentDate-asc",
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(5, ((IEnumerable<StudentModel>)result.Data).Count());
+            Assert.Equal("Nino", ((IEnumerable<StudentModel>)result.Data).First().FirstName);
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
         public async Task Get_students_grouped_with_aggregates()
         {
             DataRequest request = new()
@@ -73,6 +108,35 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 {
                     Aggregate = "lastName-count~enrollmentDate-min",
                     Filter = null,
+                    Group = "enrollmentDate-asc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(3, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_students_grouped_with_aggregates_and_filter()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = "id~gt~0",
                     Group = "enrollmentDate-asc",
                     Page = 1,
                     Sort = null,
@@ -289,6 +353,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             StudentModel result = await request.GetSingle<StudentModel, Student>(repository);
 
             Assert.Equal("Chemistry", result.Enrollments.First(e => !e.Grade.HasValue).CourseTitle);
+            Assert.Equal("Microeconomics", result.Enrollments.First(e => e.Grade.HasValue).CourseTitle);
+            Assert.Equal("B", result.Enrollments.First(e => e.Grade.HasValue).GradeLetter);
             Assert.Equal("Arturo Anand", result.FullName);
         }
 
@@ -345,15 +411,18 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 
         #region Methods
         static MapperConfiguration MapperConfiguration;
-        private void Initialize()
+        private static void InitializeMapperConfiguration()
         {
             MapperConfiguration ??= ConfigurationHelper.GetMapperConfiguration(cfg =>
-                {
-                    cfg.AddExpressionMapping();
-                    cfg.AddMaps(typeof(SchoolProfile).GetTypeInfo().Assembly);
-                    cfg.AddProfile<ExpressionOperatorsMappingProfile>();
-                });
+            {
+                cfg.AddExpressionMapping();
+                cfg.AddMaps(typeof(SchoolProfile).GetTypeInfo().Assembly);
+                cfg.AddProfile<ExpressionOperatorsMappingProfile>();
+            });
+        }
 
+        private void Initialize()
+        {
             serviceProvider = new ServiceCollection()
                  .AddDbContext<SchoolContext>
                  (

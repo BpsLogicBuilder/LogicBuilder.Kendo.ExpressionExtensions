@@ -13,7 +13,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperPro
                 .ForMember(dest => dest.Course, opts => opts.Ignore())
                 .ReverseMap()
                 .ForMember(dest => dest.CourseTitle, opts => opts.MapFrom(x => x.Course.Title))
-                .ForMember(dest => dest.CourseNumberAndTitle, opts => opts.MapFrom(x => x.Course.CourseID.ToString() + " " + x.Course.Title))
+                .ForMember(dest => dest.CourseNumberAndTitle, opts => opts.MapFrom(x => x.Course.CourseID + " " + x.Course.Title))
                 .ForMember(dest => dest.Department, opts => opts.MapFrom(x => x.Course.Department.Name))
                 .ForAllMembers(o => o.ExplicitExpansion());
 
@@ -32,24 +32,9 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperPro
 
             CreateMap<EnrollmentModel, Enrollment>()
                 .ForMember(dest => dest.Student, opts => opts.Ignore())
-                .ForMember(dest => dest.Course, opts => opts.Ignore())
-                .ReverseMap()
-                .ForMember(dest => dest.CourseTitle, opts => opts.MapFrom(x => x.Course.Title))
-                .ForMember(dest => dest.StudentName, opts => opts.MapFrom(x => x.Student.FirstName + " " + x.Student.LastName))
-                .ForMember(dest => dest.Grade, opts => opts.MapFrom(x => x.Grade.HasValue ? (Contoso.Domain.Entities.Grade?)(int)x.Grade.Value : null))
-                .ForMember
-                (
-                    dest => dest.GradeLetter,
-                    opts => opts.MapFrom
-                    (
-                        x => x.Grade == Contoso.Data.Entities.Grade.A ? "A"
-                            : x.Grade == Contoso.Data.Entities.Grade.B ? "B"
-                            : x.Grade == Contoso.Data.Entities.Grade.C ? "C"
-                            : x.Grade == Contoso.Data.Entities.Grade.D ? "D"
-                            : x.Grade == Contoso.Data.Entities.Grade.F ? "F" : ""
-                    )
-                )
-                .ForAllMembers(o => o.ExplicitExpansion());
+                .ForMember(dest => dest.Course, opts => opts.Ignore());
+            CreateEnrollmentToEnrollmentModelMap();
+            
 
             CreateMap<InstructorModel, Instructor>()
                 .ReverseMap()
@@ -65,6 +50,27 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperPro
                 .ReverseMap()
             .ForMember(dest => dest.FullName, opts => opts.MapFrom(x => x.FirstName + " " + x.LastName))
             .ForAllMembers(o => o.ExplicitExpansion());
+        }
+
+        private void CreateEnrollmentToEnrollmentModelMap()//NOSONAR - required for LINQ Expression translation
+        {
+            CreateMap<Enrollment, EnrollmentModel>()
+                .ForMember(dest => dest.CourseTitle, opts => opts.MapFrom(x => x.Course.Title))
+                .ForMember(dest => dest.StudentName, opts => opts.MapFrom(x => x.Student.FirstName + " " + x.Student.LastName))
+                .ForMember(dest => dest.Grade, opts => opts.MapFrom(x => x.Grade.HasValue ? (Contoso.Domain.Entities.Grade?)(int)x.Grade.Value : null))
+                .ForMember
+                (
+                    dest => dest.GradeLetter,
+                    opts => opts.MapFrom
+                    (
+                        x => x.Grade == Contoso.Data.Entities.Grade.A ? "A"
+                            : x.Grade == Contoso.Data.Entities.Grade.B ? "B"
+                            : x.Grade == Contoso.Data.Entities.Grade.C ? "C"
+                            : x.Grade == Contoso.Data.Entities.Grade.D ? "D"
+                            : x.Grade == Contoso.Data.Entities.Grade.F ? "F" : "" //NOSONAR - required to project a database enum to a string value.
+                    )
+                )
+                .ForAllMembers(o => o.ExplicitExpansion());
         }
     }
 }

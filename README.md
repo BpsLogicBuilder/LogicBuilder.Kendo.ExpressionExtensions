@@ -1,5 +1,11 @@
 # LogicBuilder.Kendo.ExpressionExtensions
 
+[![CI](https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions/actions/workflows/ci.yml/badge.svg)](https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions/actions/workflows/github-code-scanning/codeql)
+[![codecov](https://codecov.io/github/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions/graph/badge.svg?token=GUIX3VW7BX)](https://codecov.io/github/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=BpsLogicBuilder_LogicBuilder.Kendo.ExpressionExtensions&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=BpsLogicBuilder_LogicBuilder.Kendo.ExpressionExtensions)
+[![NuGet](https://img.shields.io/nuget/v/LogicBuilder.Kendo.ExpressionExtensions.svg)](https://www.nuget.org/packages/LogicBuilder.Kendo.ExpressionExtensions)
+
 A library that extends Telerik's Kendo UI DataSourceRequest functionality with powerful LINQ expression building capabilities for ASP.NET Core applications.
 
 ## Overview
