@@ -6,13 +6,8 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.Grouping
 {
-    internal class QueryableAggregatesExpressionBuilderEx : GroupDescriptorExpressionBuilderEx
+    internal class QueryableAggregatesExpressionBuilderEx(Expression queryable, IEnumerable<AggregateFunction> aggregateFunctions) : GroupDescriptorExpressionBuilderEx(queryable, CreateDescriptor(aggregateFunctions))
     {
-        public QueryableAggregatesExpressionBuilderEx(Expression queryable, IEnumerable<AggregateFunction> aggregateFunctions)
-            : base(queryable, CreateDescriptor(aggregateFunctions))
-        {
-        }
-
         private static GroupDescriptor CreateDescriptor(IEnumerable<AggregateFunction> aggregateFunctions)
         {
             var groupDescriptor = new GroupDescriptor();

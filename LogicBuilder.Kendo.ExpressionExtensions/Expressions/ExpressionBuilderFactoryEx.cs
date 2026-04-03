@@ -10,7 +10,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Expressions
         public static MemberAccessExpressionBuilderBase MemberAccess(Expression expression, Type memberType, string memberName)
         {
             var builder = ExpressionBuilderFactory.MemberAccess(expression.GetUnderlyingElementType(), memberType, memberName);
-            //builder.Options.LiftMemberAccessToNull = source.Provider.IsLinqToObjectsProvider();
             builder.Options.LiftMemberAccessToNull = false;
 
             return builder;
