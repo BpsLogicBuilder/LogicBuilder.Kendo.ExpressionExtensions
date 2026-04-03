@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests")]
 namespace LogicBuilder.Kendo.ExpressionExtensions
 {
     public class AggregatesQueryExpressions<TModel>(Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> queryableExpression, Expression<Func<IQueryable<TModel>, AggregateFunctionsGroup>> aggregateExpression)

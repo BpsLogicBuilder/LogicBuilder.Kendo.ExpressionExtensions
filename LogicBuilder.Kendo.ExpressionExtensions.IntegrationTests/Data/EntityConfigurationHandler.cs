@@ -25,9 +25,7 @@ namespace Contoso.Contexts
                 .Select(p => string.Concat(p.PropertyType.GetGenericArguments()[0].Name, "Configuration"))
                 .Aggregate(new HashSet<string>(), (hashSet, next) =>
                 {
-                    if (!hashSet.Contains(next))
-                        hashSet.Add(next);
-
+                    hashSet.Add(next);
                     return hashSet;
                 });
 

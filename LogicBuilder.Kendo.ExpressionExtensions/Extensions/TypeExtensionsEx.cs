@@ -36,7 +36,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             TypeInfo tInfo = expression.Type.GetTypeInfo();
             Type[] genericArguments = tInfo.IsGenericType ? tInfo.GetGenericArguments() : [];
             if (genericArguments.Length != 1)
-                throw new ArgumentException("type");
+                throw new ArgumentException("Generic argument count must be 1.", nameof(expression));
 
             return genericArguments[0];
         }

@@ -70,6 +70,66 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
+        public async Task Get_students_ungrouped_with_aggregates_with_descending_sort()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = null,
+                    Page = 1,
+                    Sort = "enrollmentDate-desc",
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(5, ((IEnumerable<StudentModel>)result.Data).Count());
+            Assert.Equal("Jackson", ((IEnumerable<StudentModel>)result.Data).First().FirstName);
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_students_ungrouped_with_aggregates_with_orderby_thenby_sort()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = null,
+                    Page = 1,
+                    Sort = "lastName-desc~firstName-desc",
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(5, ((IEnumerable<StudentModel>)result.Data).Count());
+            Assert.Equal("Tom", ((IEnumerable<StudentModel>)result.Data).First().FirstName);
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
         public async Task Get_students_ungrouped_with_aggregates_and_filter()
         {
             DataRequest request = new()
@@ -155,6 +215,70 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             Assert.Equal(2, result.AggregateResults.Count());
             Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
             Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_students_grouped_with_aggregates_in_descending_order()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = "enrollmentDate-desc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+            AggregateFunctionsGroup aggregateFunctionsGroup = ((IEnumerable<AggregateFunctionsGroup>)result.Data).First();
+            StudentModel student = aggregateFunctionsGroup.Items.Cast<StudentModel>().First();
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(3, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+            Assert.Equal("Jackson", student.FirstName);
+        }
+
+        [Fact]
+        public async Task Get_students_grouped_and_sorted_with_aggregates_in_descending_order()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = "lastName-desc",
+                    Page = 1,
+                    Sort = "firstName-asc",
+                    PageSize = 20
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+            AggregateFunctionsGroup aggregateFunctionsGroup = ((IEnumerable<AggregateFunctionsGroup>)result.Data).First();
+            StudentModel student = aggregateFunctionsGroup.Items.Cast<StudentModel>().First();
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(9, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+            Assert.Equal("Billie", student.FirstName);
         }
 
         [Fact]
