@@ -47,7 +47,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run unit tests
-        run: dotnet test --no-build --verbosity normal --configuration Release
+        run: dotnet test --no-build --verbosity normal --configuration Release /p:CollectCoverage=true /p:Threshold=50 /p:ThresholdType=line /p:ThresholdStat=Average /p:CoverletOutput=./TestResults/ /p:ExcludeByAttribute="GeneratedCodeAttribute" /p:CoverletOutputFormat=opencover
 
   publish-packages:
     name: Publish Package to GitHub Packages and NuGet.org
@@ -80,7 +80,7 @@ jobs:
           TELERIK_PASSWORD: ${{ secrets.TELERIK_PASSWORD }}
 
       - name: NuGet login
-        uses: NuGet/login@v1
+        uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544
         id: nuget_login
         with:
           user: ${{ secrets.NUGET_USER }}
