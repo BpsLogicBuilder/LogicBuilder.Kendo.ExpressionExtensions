@@ -106,6 +106,19 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Extensions
         }
 
         [Fact]
+        public void GetGroupByExpression_WithoutDescriptors_DoesNotCreateChildBuilder()
+        {
+            //arrange
+            ParameterExpression parameterExpression = Expression.Parameter(typeof(IQueryable<Student>), "x");
+
+            //act
+            Expression expression = parameterExpression.GetGroupByExpression([]);
+
+            //assert
+            Assert.IsType<ParameterExpression>(expression, exactMatch: false);
+        }
+
+        [Fact]
         public void CallOrderByWithoutASortDirection_DoesnotChangeTheExpression()
         {
             //arrange

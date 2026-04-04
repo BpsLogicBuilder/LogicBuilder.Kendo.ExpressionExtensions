@@ -14,7 +14,7 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
     <Description>Extensions to create IQueryable expressions from Telerik's DataSourceRequest class.  The expressions can then be executed against an IQueryable.  This package depends on Telerik.UI.for.AspNet.Core but has not been created by Telerik/Progress.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Marking obsolete methods.</PackageReleaseNotes>
+    <PackageReleaseNotes>Refactoring to optimize DevOps.</PackageReleaseNotes>
     <PackageTags>efcore kendo</PackageTags>
     <Copyright>Copyright © BPS 2018</Copyright>
     <RepositoryUrl>https://github.com/BpsLogicBuilder/LogicBuilder.Kendo.ExpressionExtensions</RepositoryUrl>
