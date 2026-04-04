@@ -39,9 +39,9 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Grouping
 
         private class MockGroupDescriptorExpressionBuilder(Expression expression) : GroupDescriptorExpressionBuilderBaseEx(expression)
         {
-            public void SetQueryable(Expression queryable)
+            public void SetQueryable(Expression newQueryable)
             {
-                this.Queryable = queryable;
+                this.Queryable = newQueryable;
             }
 
             public ListSortDirection? GetSortDirection() => this.SortDirection;
