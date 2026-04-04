@@ -189,6 +189,80 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
+        public async Task Get_students_grouped_by_lastName_then_by_enrollmentDate_with_aggregates()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = "lastName-desc~enrollmentDate-asc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 20
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+            IEnumerable<AggregateFunctionsGroup> outerGroups = (IEnumerable<AggregateFunctionsGroup>)result.Data;
+            AggregateFunctionsGroup aggregateFunctionsGroup = outerGroups.First();
+            AggregateFunctionsGroup firstInnerGroup = aggregateFunctionsGroup.Items.Cast<AggregateFunctionsGroup>().First();
+            StudentModel student = firstInnerGroup.Items.Cast<StudentModel>().First();
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(9, outerGroups.Count());
+            Assert.Equal(2, aggregateFunctionsGroup.Items.Cast<AggregateFunctionsGroup>().Count());
+            Assert.Equal(2, firstInnerGroup.Items.Cast<StudentModel>().Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+            Assert.True(new[] { "Billie", "Tom" }.Contains(student.FirstName));
+        }
+
+        [Fact]
+        public async Task Get_students_grouped_by_lastName_then_by_enrollmentDate_then_by_firstName_with_aggregates()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = "lastName-desc~enrollmentDate-asc~firstName-asc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 20
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+            IEnumerable<AggregateFunctionsGroup> outerGroups = (IEnumerable<AggregateFunctionsGroup>)result.Data;
+            AggregateFunctionsGroup aggregateFunctionsGroup = outerGroups.First();
+            AggregateFunctionsGroup firstInnerGroup = aggregateFunctionsGroup.Items.Cast<AggregateFunctionsGroup>().First();
+            AggregateFunctionsGroup chileOfFirstInnerGroup = firstInnerGroup.Items.Cast<AggregateFunctionsGroup>().First();
+            StudentModel student = chileOfFirstInnerGroup.Items.Cast<StudentModel>().First();
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(9, outerGroups.Count());
+            Assert.Equal(2, aggregateFunctionsGroup.Items.Cast<AggregateFunctionsGroup>().Count());
+            Assert.Equal(2, firstInnerGroup.Items.Cast<AggregateFunctionsGroup>().Count());
+            Assert.Single(chileOfFirstInnerGroup.Items.Cast<StudentModel>());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+            Assert.Equal("Billie", student.FirstName);
+        }
+
+        [Fact]
         public async Task Get_students_grouped_with_aggregates_and_filter()
         {
             DataRequest request = new()
