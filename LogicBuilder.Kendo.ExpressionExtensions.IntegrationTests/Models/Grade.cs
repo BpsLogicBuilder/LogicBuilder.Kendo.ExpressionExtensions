@@ -1,4 +1,4 @@
-﻿namespace Contoso.Domain.Entities
+﻿namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models
 {
     public enum Grade
     {

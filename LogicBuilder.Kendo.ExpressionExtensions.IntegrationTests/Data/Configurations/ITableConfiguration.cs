@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.Contexts.Configuations
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data.Configurations
 {
     interface ITableConfiguration
     {

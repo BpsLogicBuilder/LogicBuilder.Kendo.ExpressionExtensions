@@ -1,3 +1,5 @@
+* 2026-06-24 - AB#184: Prevent instance method from writing to static member.
+* 2026-06-24 - AB#184: Update workflow runners to use ubuntu-latest.
 * 2026-04-06 - AB#91: Update package release notes.
 * 2026-04-04 - AB#91: Added test coverage for outstanding lines.
 * 2026-04-03 - AB#91: Improve test coverage.

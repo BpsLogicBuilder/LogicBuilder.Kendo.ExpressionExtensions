@@ -155,14 +155,18 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Extensions
 
         private class TestClassWithSortableProperties
         {
+#pragma warning disable S1144
             public int Id { get; set; } //NOSONAR - required for testing
             public string Name { get; set; } //NOSONAR - required for testing
+#pragma warning restore S1144
         }
 
         private class TestClassWithNonSortableFirst
         {
+#pragma warning disable S1144
             public TypeExtensionsExTest NonSortable { get; set; } //NOSONAR - required for testing
             public string Name { get; set; } //NOSONAR - required for testing
+#pragma warning restore S1144
         }
     }
 }

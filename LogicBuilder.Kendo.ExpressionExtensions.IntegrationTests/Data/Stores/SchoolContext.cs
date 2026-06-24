@@ -1,17 +1,9 @@
-﻿using Contoso.Data.Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace Contoso.Contexts
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data.Stores
 {
-    public class SchoolContext : BaseDbContext
+    public class SchoolContext(DbContextOptions<SchoolContext> options) : BaseDbContext(options)
     {
-        public SchoolContext(DbContextOptions<SchoolContext> options) : base(options)
-        {
-        }
-
         public DbSet<Course> Courses { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Student> Students { get; set; }

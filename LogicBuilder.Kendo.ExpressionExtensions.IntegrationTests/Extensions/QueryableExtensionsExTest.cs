@@ -1,4 +1,4 @@
-﻿using Contoso.Data.Entities;
+﻿using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
 using Kendo.Mvc.UI;
 using LogicBuilder.Kendo.ExpressionExtensions.Extensions;
 using System;

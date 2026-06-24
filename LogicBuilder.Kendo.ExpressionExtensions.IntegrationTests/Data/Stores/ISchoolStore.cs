@@ -1,9 +1,6 @@
-﻿using LogicBuilder.EntityFrameworkCore.SqlServer.Crud.DataStores;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using LogicBuilder.EntityFrameworkCore.Crud.DataStores;
 
-namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data.Stores
 {
     public interface ISchoolStore : IStore
     {

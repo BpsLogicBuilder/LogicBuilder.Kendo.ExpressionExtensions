@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
-using LogicBuilder.EntityFrameworkCore.SqlServer.Repositories;
-using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
+using LogicBuilder.EntityFrameworkCore.Repositories;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data.Stores;
 
-namespace Contoso.Repositories
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Repositories
 {
-    public class SchoolRepository : ContextRepositoryBase, ISchoolRepository
+    public class SchoolRepository(ISchoolStore store, IMapper mapper) : ContextRepositoryBase(store, mapper), ISchoolRepository
     {
-        public SchoolRepository(ISchoolStore store, IMapper mapper) : base(store, mapper)
-        {
-        }
     }
 }
