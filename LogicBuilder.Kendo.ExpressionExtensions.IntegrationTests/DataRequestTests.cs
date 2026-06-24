@@ -609,6 +609,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         #endregion Tests
 
         #region Methods
+        private void Initialize()
+        {
+            InitializeServiceProvider(databaseFixture.GetConnectionString(GetType().Name));
+            SchoolContext context = serviceProvider.GetRequiredService<SchoolContext>();
+            context.Database.EnsureCreated();
+
+            Task.Run(async () => await Seed_Database(serviceProvider.GetRequiredService<ISchoolRepository>())).Wait();
+        }
+
         static MapperConfiguration MapperConfiguration;
         private static void InitializeMapperConfiguration()
         {
@@ -620,14 +629,14 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             });
         }
 
-        private void Initialize()
+        private static void InitializeServiceProvider(string connectionString)
         {
             serviceProvider ??= new ServiceCollection()
                  .AddDbContext<SchoolContext>
                  (
                     options => options.UseSqlServer
                     (
-                        databaseFixture.GetConnectionString(GetType().Name),
+                        connectionString,
                         options => options.EnableRetryOnFailure()
                     ),
                     ServiceLifetime.Transient
@@ -640,11 +649,6 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                 )
                 .AddTransient<IMapper>(sp => new Mapper(sp.GetRequiredService<AutoMapper.IConfigurationProvider>(), sp.GetService))
                 .BuildServiceProvider();
-
-            SchoolContext context = serviceProvider.GetRequiredService<SchoolContext>();
-            context.Database.EnsureCreated();
-
-            Task.Run(async () => await Seed_Database(serviceProvider.GetRequiredService<ISchoolRepository>())).Wait();
         }
         #endregion Methods
 
