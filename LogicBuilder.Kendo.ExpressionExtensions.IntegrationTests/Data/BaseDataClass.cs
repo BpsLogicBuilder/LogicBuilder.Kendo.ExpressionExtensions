@@ -1,7 +1,6 @@
 ﻿using LogicBuilder.Data;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Contoso.Data.Entities
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data
 {
     abstract public class BaseDataClass : BaseData
     {

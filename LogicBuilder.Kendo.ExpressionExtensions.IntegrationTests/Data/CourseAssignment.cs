@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace Contoso.Data.Entities
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data
 {
     [Table("CourseAssignment")]
     public class CourseAssignment : BaseDataClass

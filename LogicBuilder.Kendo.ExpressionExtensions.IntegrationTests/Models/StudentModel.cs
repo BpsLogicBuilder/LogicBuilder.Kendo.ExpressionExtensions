@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 
 
-namespace Contoso.Domain.Entities
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models
 {
     public class StudentModel : BaseModelClass
     {

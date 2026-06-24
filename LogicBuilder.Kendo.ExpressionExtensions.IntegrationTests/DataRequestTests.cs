@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
 using AutoMapper.Extensions.ExpressionMapping;
-using Contoso.Contexts;
-using Contoso.Data.Entities;
-using Contoso.Domain.Entities;
-using Contoso.Repositories;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models;
 using Kendo.Mvc.Infrastructure;
 using Kendo.Mvc.UI;
-using LogicBuilder.EntityFrameworkCore.SqlServer.Mapping;
+using LogicBuilder.EntityFrameworkCore.Mapping;
 using LogicBuilder.Expressions.Utils.Expansions;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperProfiles;
 using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data.Stores;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -22,20 +21,22 @@ using Xunit;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 {
-    public class DataRequestTests
+    public class DataRequestTests : IClassFixture<DatabaseFixture>
     {
         static DataRequestTests()
         {
             InitializeMapperConfiguration();
         }
 
-        public DataRequestTests()
+        public DataRequestTests(DatabaseFixture databaseFixture)
         {
+            this.databaseFixture = databaseFixture;
             Initialize();
         }
 
         #region Fields
-        private IServiceProvider serviceProvider;
+        private readonly DatabaseFixture databaseFixture;
+        private static IServiceProvider serviceProvider;
         #endregion Fields
 
         #region Tests
@@ -621,12 +622,12 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 
         private void Initialize()
         {
-            serviceProvider = new ServiceCollection()
+            serviceProvider ??= new ServiceCollection()
                  .AddDbContext<SchoolContext>
                  (
                     options => options.UseSqlServer
                     (
-                        @"Server=(localdb)\mssqllocaldb;Database=DataRequestTests;ConnectRetryCount=0",
+                        databaseFixture.GetConnectionString(GetType().Name),
                         options => options.EnableRetryOnFailure()
                     ),
                     ServiceLifetime.Transient
@@ -774,15 +775,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     {
                         new() {
                             CourseID = courses.Single(c => c.Title == "Chemistry" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.A
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.A
                         },
                         new() {
                             CourseID = courses.Single(c => c.Title == "Microeconomics" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.C
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.C
                         },
                         new() {
                             CourseID = courses.Single(c => c.Title == "Macroeconomics" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -795,15 +796,15 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                     {
                         new() {
                             CourseID = courses.Single(c => c.Title == "Calculus" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         },
                         new() {
                             CourseID = courses.Single(c => c.Title == "Trigonometry" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         },
                         new() {
                             CourseID = courses.Single(c => c.Title == "Composition" ).CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -819,7 +820,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         },
                         new() {
                             CourseID = courses.Single(c => c.Title == "Microeconomics").CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         },
                     }
                 },
@@ -833,7 +834,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = courses.Single(c => c.Title == "Chemistry").CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -847,7 +848,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = courses.Single(c => c.Title == "Composition").CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -861,7 +862,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = courses.Single(c => c.Title == "Literature").CourseID,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -888,7 +889,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = 1045,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -903,7 +904,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = 1050,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 },
@@ -918,7 +919,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
                         new()
                         {
                             CourseID = 2021,
-                            Grade = Contoso.Domain.Entities.Grade.B
+                            Grade = LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade.B
                         }
                     }
                 }

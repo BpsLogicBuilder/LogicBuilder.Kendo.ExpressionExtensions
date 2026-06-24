@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Contoso.Data.Entities;
-using Contoso.Domain.Entities;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data;
+using LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperProfiles
 {
@@ -52,22 +52,26 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.AutoMapperPro
             .ForAllMembers(o => o.ExplicitExpansion());
         }
 
+#pragma warning disable S3776
         private void CreateEnrollmentToEnrollmentModelMap()//NOSONAR - required for LINQ Expression translation
+#pragma warning restore S3776
         {
             CreateMap<Enrollment, EnrollmentModel>()
                 .ForMember(dest => dest.CourseTitle, opts => opts.MapFrom(x => x.Course.Title))
                 .ForMember(dest => dest.StudentName, opts => opts.MapFrom(x => x.Student.FirstName + " " + x.Student.LastName))
-                .ForMember(dest => dest.Grade, opts => opts.MapFrom(x => x.Grade.HasValue ? (Contoso.Domain.Entities.Grade?)(int)x.Grade.Value : null))
+                .ForMember(dest => dest.Grade, opts => opts.MapFrom(x => x.Grade.HasValue ? (LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Grade?)(int)x.Grade.Value : null))
                 .ForMember
                 (
                     dest => dest.GradeLetter,
                     opts => opts.MapFrom
                     (
-                        x => x.Grade == Contoso.Data.Entities.Grade.A ? "A"
-                            : x.Grade == Contoso.Data.Entities.Grade.B ? "B"
-                            : x.Grade == Contoso.Data.Entities.Grade.C ? "C"
-                            : x.Grade == Contoso.Data.Entities.Grade.D ? "D"
-                            : x.Grade == Contoso.Data.Entities.Grade.F ? "F" : "" //NOSONAR - required to project a database enum to a string value.
+#pragma warning disable S3358
+                        x => x.Grade == Data.Grade.A ? "A"
+                            : x.Grade == Data.Grade.B ? "B"
+                            : x.Grade == Data.Grade.C ? "C"
+                            : x.Grade == Data.Grade.D ? "D"
+                            : x.Grade == Data.Grade.F ? "F" : "" //NOSONAR - required to project a database enum to a string value.
+#pragma warning restore S3358
                     )
                 )
                 .ForAllMembers(o => o.ExplicitExpansion());

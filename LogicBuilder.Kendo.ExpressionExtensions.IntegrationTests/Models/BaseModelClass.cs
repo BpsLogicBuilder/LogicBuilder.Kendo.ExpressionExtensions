@@ -1,7 +1,6 @@
 ﻿using LogicBuilder.Domain;
-using Newtonsoft.Json;
 
-namespace Contoso.Domain
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models
 {
     abstract public class BaseModelClass : BaseModel
     {

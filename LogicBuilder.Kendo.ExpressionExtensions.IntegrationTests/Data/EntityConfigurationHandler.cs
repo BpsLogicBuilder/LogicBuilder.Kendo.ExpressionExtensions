@@ -4,17 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Contoso.Contexts
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Data
 {
-    public class EntityConfigurationHandler
+    public class EntityConfigurationHandler(DbContext context)
     {
-        public EntityConfigurationHandler(DbContext context)
-        {
-            this.Context = context;
-        }
 
         #region Properties
-        protected DbContext Context { get; private set; }
+        protected DbContext Context { get; private set; } = context;
         #endregion Properties
 
         #region Methods
@@ -29,7 +25,7 @@ namespace Contoso.Contexts
                     return hashSet;
                 });
 
-            Type interfaceType = typeof(Configuations.ITableConfiguration);
+            Type interfaceType = typeof(Configurations.ITableConfiguration);
             interfaceType.GetTypeInfo().Assembly.GetTypes().Where(p => interfaceType.IsAssignableFrom(p)
                                 && mapNames.Contains(p.Name)
                                 && !p.GetTypeInfo().IsAbstract
@@ -37,7 +33,7 @@ namespace Contoso.Contexts
                                 && !p.GetTypeInfo().IsInterface).ToList().ForEach(t =>
                                 {
                                     MethodInfo mi = t.GetMethod("Configure");
-                                    mi.Invoke(Activator.CreateInstance(t), new object[] { modelBuilder });
+                                    mi.Invoke(Activator.CreateInstance(t), [modelBuilder]);
                                 });
         }
         #endregion Methods

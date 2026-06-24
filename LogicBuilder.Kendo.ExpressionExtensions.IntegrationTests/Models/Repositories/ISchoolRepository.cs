@@ -1,6 +1,6 @@
-﻿using LogicBuilder.EntityFrameworkCore.SqlServer.Repositories;
+﻿using LogicBuilder.EntityFrameworkCore.Repositories;
 
-namespace Contoso.Repositories
+namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Models.Repositories
 {
     public interface ISchoolRepository : IContextRepository
     {

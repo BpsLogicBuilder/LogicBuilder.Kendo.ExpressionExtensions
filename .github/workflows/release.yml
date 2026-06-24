@@ -12,7 +12,7 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -29,10 +29,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Add Telerik Nuget source
-        run: dotnet nuget add source https://nuget.telerik.com/v3/index.json -n telerik -u ${{ env.TELERIK_USERNAME }} -p ${{ env.TELERIK_PASSWORD }}
+        run: dotnet nuget add source https://nuget.telerik.com/v3/index.json -n telerik -u ${{ env.TELERIK_USERNAME }} -p ${{ env.TELERIK_PASSWORD }} --store-password-in-clear-text
         env:
           TELERIK_USERNAME: ${{ secrets.TELERIK_USERNAME }}
-          TELERIK_PASSWORD: ${{ secrets.TELERIK_PASSWORD }}
+          TELERIK_PASSWORD: ${{ secrets.TELERIK_NUGET_KEY }}
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -51,7 +51,7 @@ jobs:
 
   publish-packages:
     name: Publish Package to GitHub Packages and NuGet.org
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'BpsLogicBuilder'
     permissions:
       contents: read
@@ -74,10 +74,10 @@ jobs:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add Telerik Nuget source
-        run: dotnet nuget add source https://nuget.telerik.com/v3/index.json -n telerik -u ${{ env.TELERIK_USERNAME }} -p ${{ env.TELERIK_PASSWORD }}
+        run: dotnet nuget add source https://nuget.telerik.com/v3/index.json -n telerik -u ${{ env.TELERIK_USERNAME }} -p ${{ env.TELERIK_PASSWORD }} --store-password-in-clear-text
         env:
           TELERIK_USERNAME: ${{ secrets.TELERIK_USERNAME }}
-          TELERIK_PASSWORD: ${{ secrets.TELERIK_PASSWORD }}
+          TELERIK_PASSWORD: ${{ secrets.TELERIK_NUGET_KEY }}
 
       - name: NuGet login
         uses: NuGet/login@d22cc5f58ff5b88bf9bd452535b4335137e24544
@@ -93,12 +93,12 @@ jobs:
 
       - name: Publish Packages
         run: |
-          dotnet pack ${{ env.PROJECT_PATH }} --configuration Release -o .\nupkg --no-build
+          dotnet pack ${{ env.PROJECT_PATH }} --configuration Release -o ./nupkg --no-build
           dotnet nuget push ${{ env.NUGET_PACKAGE_PATH }} --skip-duplicate --api-key ${{ env.GITHUB_TOKEN }}
           dotnet nuget push ${{ env.NUGET_PACKAGE_PATH }} --skip-duplicate --source ${{ env.NUGET_URL }} --api-key ${{ env.NUGET_API_KEY }}
         env:
           NUGET_URL: 'https://api.nuget.org/v3/index.json'
           NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
-          NUGET_PACKAGE_PATH: "${{ format('.\\nupkg\\{0}.*.nupkg', env.PROJECT_NAME) }}"
-          PROJECT_PATH: "${{ format('.\\{0}\\{0}.csproj', env.PROJECT_NAME) }}"
+          NUGET_PACKAGE_PATH: "${{ format('./nupkg/{0}.*.nupkg', env.PROJECT_NAME) }}"
+          PROJECT_PATH: "${{ format('./{0}/{0}.csproj', env.PROJECT_NAME) }}"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
