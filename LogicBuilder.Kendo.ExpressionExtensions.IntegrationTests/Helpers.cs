@@ -142,8 +142,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             return new DataSourceResult
             {
                 Data = await contextRepository.QueryAsync<TModel, TData, IQueryable<TModel>, IQueryable<TData>>(ungroupedExp, selectExpandDefinition),
-                AggregateResults = getAggregates
-                                    ? (await GetAggregateFunctionsGroup()).GetAggregateResults(request.Aggregates.SelectMany(a => a.Aggregates))
+                AggregateResults = getAggregates//GetAggregateFunctionsGroup() may return null
+                                    ? (await GetAggregateFunctionsGroup())?.GetAggregateResults(request.Aggregates.SelectMany(a => a.Aggregates))
                                     : null,
                 Total = await contextRepository.QueryAsync<TModel, TData, int, int>(totalExp, selectExpandDefinition)
             };
@@ -165,8 +165,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             return new DataSourceResult
             {
                 Data = await GetData(),
-                AggregateResults = getAggregates
-                                    ? (await GetAggregateFunctionsGroup()).GetAggregateResults(request.Aggregates.SelectMany(a => a.Aggregates))
+                AggregateResults = getAggregates//GetAggregateFunctionsGroup() may return null
+                                    ? (await GetAggregateFunctionsGroup())?.GetAggregateResults(request.Aggregates.SelectMany(a => a.Aggregates))
                                     : null,
                 Total = await contextRepository.QueryAsync<TModel, TData, int, int>(totalExp, selectExpandDefinition)
             };

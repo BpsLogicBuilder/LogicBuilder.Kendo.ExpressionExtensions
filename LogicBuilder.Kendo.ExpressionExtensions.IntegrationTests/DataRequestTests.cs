@@ -41,6 +41,60 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
 
         #region Tests
         [Fact]
+        public async Task Get_course_ungrouped_with_aggregates_and_filter()
+        {
+            //arrange
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "credits-sum",
+                    Filter = "credits~eq~3",
+                    Group = null,
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 5
+                }
+            };
+
+            //act
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<CourseModel, Course>(repository);
+
+            //assert
+            Assert.Equal(4, result.Total);
+            Assert.Equal(4, ((IEnumerable<CourseModel>)result.Data).Count());
+            Assert.Single(result.AggregateResults);
+        }
+
+        [Fact]
+        public async Task Get_course_ungrouped_with_aggregates_and_filter_with_no_data_returned()
+        {
+            //arrange
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "credits-sum",
+                    Filter = "credits~eq~0",
+                    Group = null,
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 5
+                }
+            };
+
+            //act
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<CourseModel, Course>(repository);
+
+            //assert
+            Assert.Equal(0, result.Total);
+            Assert.Empty((IEnumerable<CourseModel>)result.Data);
+            Assert.Null(result.AggregateResults);
+        }
+
+        [Fact]
         public async Task Get_students_ungrouped_with_aggregates()
         {
             DataRequest request = new()
@@ -187,6 +241,33 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
             Assert.Equal(2, result.AggregateResults.Count());
             Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
             Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_students_grouped_with_aggregates_and_no_items_found()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = "id~eq~0",
+                    Group = "enrollmentDate-asc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(0, result.Total);
+            Assert.Empty((IEnumerable<AggregateFunctionsGroup>)result.Data);
+            Assert.Null(result.AggregateResults);
         }
 
         [Fact]
