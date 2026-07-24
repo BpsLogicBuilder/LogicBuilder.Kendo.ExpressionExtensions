@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 
 namespace LogicBuilder.Kendo.ExpressionExtensions
 {
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [Obsolete("Use GroupingQueryExpressions")]//NOSONAR
     public class GroupByQueryExpressions<TModel>(Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> pagingExpression, Expression<Func<IQueryable<TModel>, IEnumerable<AggregateFunctionsGroup>>> groupByExpression)
     {
         public Expression<Func<IQueryable<TModel>, IQueryable<TModel>>> PagingExpression { get; set; } = pagingExpression;

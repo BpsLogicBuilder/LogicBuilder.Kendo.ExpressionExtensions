@@ -1,3 +1,4 @@
+* 2026-07-24 - AB#203: Fix duplicate paging call in LINQ expression builder.
 * 2026-07-23 - AB#200: Add tests for zero items returned and aggregates requested.
 * 2026-06-24 - AB#184: Prevent instance method from writing to static member.
 * 2026-06-24 - AB#184: Update workflow runners to use ubuntu-latest.

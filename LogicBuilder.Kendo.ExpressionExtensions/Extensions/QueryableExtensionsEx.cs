@@ -60,6 +60,8 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+        [Obsolete("""Use <see cref="CreateGroupingQueryExpressions<TModel>(this DataSourceRequest request)"/>""")]//NOSONAR
         public static GroupByQueryExpressions<TModel> CreateGroupedByQueryExpressions<TModel>(this DataSourceRequest request)
         {
             if (request.Groups == null || request.Groups.Count == 0)
@@ -135,6 +137,91 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             temporarySortDescriptors.Each(sortDescriptor => sort.Remove(sortDescriptor));
 
             return new GroupByQueryExpressions<TModel>(pagingExpression, groupByExpression);
+        }
+
+        /// <summary>
+        /// Creates two expressions: the first for applying sorts and filters to a queryable and the second for paging and grouping the reults
+        /// </summary>
+        /// <typeparam name="TModel"></typeparam>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static GroupingQueryExpressions<TModel> CreateGroupingQueryExpressions<TModel>(this DataSourceRequest request)
+        {
+            if (request.Groups == null || request.Groups.Count == 0)
+                throw new ArgumentException("Groups are required.", nameof(request));
+
+            ParameterExpression param = Expression.Parameter(typeof(IQueryable<TModel>), "q");
+            Expression ex = param;
+
+            var filters = new List<IFilterDescriptor>();
+            if (request.Filters != null)
+                filters.AddRange(request.Filters);
+
+            if (filters.Count != 0)
+                ex = ex.Where(filters);
+
+            var sort = new List<SortDescriptor>();
+            if (request.Sorts != null)
+                sort.AddRange(request.Sorts);
+
+            var temporarySortDescriptors = new List<SortDescriptor>();
+            IList<GroupDescriptor> groups = [.. request.Groups];
+
+            var aggregates = new List<AggregateDescriptor>();
+            if (request.Aggregates != null)
+                aggregates.AddRange(request.Aggregates);
+
+            if (aggregates.Count != 0)
+                groups.Each(g =>
+                {
+                    g.AggregateFunctions.Clear();
+                    g.AggregateFunctions.AddRange(aggregates.SelectMany(a => a.Aggregates));
+                });
+
+            if (sort.Count == 0)
+            {
+                // The Entity Framework provider demands OrderBy before calling Skip.
+                SortDescriptor sortDescriptor = new()
+                {
+                    Member = ex.GetUnderlyingElementType().FirstSortableProperty()
+                };
+                sort.Add(sortDescriptor);
+                temporarySortDescriptors.Add(sortDescriptor);
+            }
+
+            groups.Reverse().Each(groupDescriptor =>
+            {
+                var sortDescriptor = new SortDescriptor
+                {
+                    Member = groupDescriptor.Member,
+                    SortDirection = groupDescriptor.SortDirection
+                };
+
+                sort.Insert(0, sortDescriptor);
+                temporarySortDescriptors.Add(sortDescriptor);
+            });
+
+            ex = ex.GetSortExpression(sort);
+
+            var notPagedData = ex;
+            var notPagedExpression = Expression.Lambda<Func<IQueryable<TModel>, IQueryable<TModel>>>
+            (
+                notPagedData,
+                param
+            );
+
+            ex = ex.GetPageExpression(request.Page - 1, request.PageSize);
+
+            var groupByExpression = Expression.Lambda<Func<IQueryable<TModel>, IEnumerable<AggregateFunctionsGroup>>>
+            (
+                ex.GetGroupByExpression(notPagedData, groups),
+                param
+            );
+
+            temporarySortDescriptors.Each(sortDescriptor => sort.Remove(sortDescriptor));
+
+            return new GroupingQueryExpressions<TModel>(notPagedExpression, groupByExpression);
         }
 
         /// <summary>

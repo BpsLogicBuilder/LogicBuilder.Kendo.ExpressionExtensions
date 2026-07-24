@@ -172,7 +172,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Extensions
         }
 
         [Fact]
-        public void CreateGroupedByQueryExpressions_ThrowsIfGroupsIsNull()
+        public void CreateGroupingQueryExpressions_ThrowsIfGroupsIsNull()
         {
             //arrange
             DataSourceRequestOptions dataSourceRequestOptions = new()
@@ -187,7 +187,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Extensions
             DataSourceRequest dataSourceRequest = dataSourceRequestOptions.CreateDataSourceRequest();
 
             //act & assert
-            Assert.Throws<ArgumentException>(dataSourceRequest.CreateGroupedByQueryExpressions<Student>);
+            Assert.Throws<ArgumentException>(dataSourceRequest.CreateGroupingQueryExpressions<Student>);
         }
 
         [Fact]
@@ -207,7 +207,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests.Extensions
             dataSourceRequest.Groups = [];
 
             //act & assert
-            Assert.Throws<ArgumentException>(dataSourceRequest.CreateGroupedByQueryExpressions<Student>);
+            Assert.Throws<ArgumentException>(dataSourceRequest.CreateGroupingQueryExpressions<Student>);
         }
 
         [Fact]
