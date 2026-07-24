@@ -244,6 +244,93 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.IntegrationTests
         }
 
         [Fact]
+        public async Task Get_students_grouped_by_first_name_with_aggregates_second_page()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "lastName-count~enrollmentDate-min",
+                    Filter = null,
+                    Group = "firstName-asc",
+                    Page = 2,
+                    Sort = null,
+                    PageSize = 5
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<StudentModel, Student>(repository);
+
+            Assert.Equal(11, result.Total);
+            Assert.Equal(5, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(11, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_courses_grouped_by_department_with_aggregates()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "title-count~credits-min",
+                    Filter = null,
+                    Group = "departmentName-asc",
+                    Page = 1,
+                    Sort = null,
+                    PageSize = 10
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<CourseModel, Course>(repository);
+
+            Assert.Equal(7, result.Total);
+            Assert.Equal(4, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(7, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
+        public async Task Get_courses_grouped_by_department_with_aggregates_second_page()
+        {
+            DataRequest request = new()
+            {
+                Options = new DataSourceRequestOptions
+                {
+                    Aggregate = "title-count~credits-min",
+                    Filter = null,
+                    Group = "departmentName-asc",
+                    Page = 2,
+                    Sort = null,
+                    PageSize = 3
+                },
+                Includes = null,
+                Selects = null,
+                Distinct = false
+            };
+
+            ISchoolRepository repository = serviceProvider.GetRequiredService<ISchoolRepository>();
+            DataSourceResult result = await request.GetData<CourseModel, Course>(repository);
+
+            Assert.Equal(7, result.Total);
+            Assert.Equal(2, ((IEnumerable<AggregateFunctionsGroup>)result.Data).Count());
+            Assert.Equal(2, result.AggregateResults.Count());
+            Assert.Equal("Count", result.AggregateResults.First().AggregateMethodName);
+            Assert.Equal(7, (int)result.AggregateResults.First().Value);
+        }
+
+        [Fact]
         public async Task Get_students_grouped_with_aggregates_and_no_items_found()
         {
             DataRequest request = new()

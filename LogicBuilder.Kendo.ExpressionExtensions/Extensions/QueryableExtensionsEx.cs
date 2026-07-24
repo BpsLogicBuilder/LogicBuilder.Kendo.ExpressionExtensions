@@ -54,13 +54,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
         }
 
         /// <summary>
-        /// Allow paging expression to be be handled separately from the grouping expression
+        /// Creates two expressions: the first for applying sorts and filters to a queryable and the second for paging and grouping the reults
         /// </summary>
         /// <typeparam name="TModel"></typeparam>
         /// <param name="request"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static GroupByQueryExpressions<TModel> CreateGroupedByQueryExpressions<TModel>(this DataSourceRequest request)
+        public static GroupingQueryExpressions<TModel> CreateGroupingQueryExpressions<TModel>(this DataSourceRequest request)
         {
             if (request.Groups == null || request.Groups.Count == 0)
                 throw new ArgumentException("Groups are required.", nameof(request));
@@ -119,12 +119,13 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
             ex = ex.GetSortExpression(sort);
 
             var notPagedData = ex;
-            ex = ex.GetPageExpression(request.Page - 1, request.PageSize);
-            var pagingExpression = Expression.Lambda<Func<IQueryable<TModel>, IQueryable<TModel>>>
+            var notPagedExpression = Expression.Lambda<Func<IQueryable<TModel>, IQueryable<TModel>>>
             (
-                ex,
+                notPagedData,
                 param
             );
+
+            ex = ex.GetPageExpression(request.Page - 1, request.PageSize);
 
             var groupByExpression = Expression.Lambda<Func<IQueryable<TModel>, IEnumerable<AggregateFunctionsGroup>>>
             (
@@ -134,7 +135,7 @@ namespace LogicBuilder.Kendo.ExpressionExtensions.Extensions
 
             temporarySortDescriptors.Each(sortDescriptor => sort.Remove(sortDescriptor));
 
-            return new GroupByQueryExpressions<TModel>(pagingExpression, groupByExpression);
+            return new GroupingQueryExpressions<TModel>(notPagedExpression, groupByExpression);
         }
 
         /// <summary>
